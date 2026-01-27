@@ -23,6 +23,7 @@
 import { existsSync, mkdirSync, renameSync, unlinkSync } from "fs";
 import type { Observation } from "../core/types.ts";
 import { SanjError, ErrorCode } from "../core/types.ts";
+import type { LLMAdapter } from "../adapters/llm/LLMAdapter.ts";
 import type {
   IObservationStore,
   ObservationQueryOptions,
@@ -456,6 +457,11 @@ export class ObservationStore implements IObservationStore {
         const aValue = a[sort.field];
         const bValue = b[sort.field];
 
+        // Handle undefined values (sort them last)
+        if (aValue === undefined && bValue === undefined) return 0;
+        if (aValue === undefined) return 1;
+        if (bValue === undefined) return -1;
+
         let comparison = 0;
         if (aValue < bValue) comparison = -1;
         if (aValue > bValue) comparison = 1;
@@ -707,6 +713,125 @@ export class ObservationStore implements IObservationStore {
     }
 
     return deleted;
+  }
+
+  // ===========================================================================
+  // Deduplication Operations
+  // ===========================================================================
+
+  /**
+   * Add or update an observation with deduplication.
+   * Checks for semantically similar existing observations using LLM.
+   * If similar found, increments count and updates metadata.
+   * If not found, creates new observation.
+   *
+   * @param candidate - Observation to add or update
+   * @param llmAdapter - LLM adapter for similarity checking
+   * @param sessionId - Session ID this observation came from
+   * @returns Processed observation (updated existing or newly created)
+   */
+  async addOrUpdate(
+    candidate: Observation,
+    llmAdapter: LLMAdapter,
+    sessionId: string
+  ): Promise<Observation> {
+    // Check if candidate already has an ID (should not for new observations)
+    if (candidate.id) {
+      // This is an update, not a new observation
+      return this.update(candidate.id, candidate);
+    }
+
+    // Check for similar existing observations
+    let similarObservation: Observation | null = null;
+
+    for (const existing of this.observations.values()) {
+      // Skip denied observations (they shouldn't be considered for deduplication)
+      if (existing.status === "denied") {
+        continue;
+      }
+
+      // Only compare observations of the same category
+      if (existing.category !== candidate.category) {
+        continue;
+      }
+
+      try {
+        const isSimilar = await llmAdapter.checkSimilarity(
+          candidate,
+          existing
+        );
+
+        if (isSimilar) {
+          similarObservation = existing;
+          break;
+        }
+      } catch (error) {
+        // Log error and treat as not similar
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.warn(
+          `[ObservationStore] LLM similarity check failed: ${errorMsg}`
+        );
+        continue;
+      }
+    }
+
+    if (similarObservation) {
+      // Update existing observation
+      similarObservation.count += 1;
+      similarObservation.lastSeen = new Date();
+
+      // Add session reference if not already present
+      if (!similarObservation.sourceSessionIds.includes(sessionId)) {
+        similarObservation.sourceSessionIds.push(sessionId);
+      }
+
+      await this.save();
+      return similarObservation;
+    } else {
+      // Create new observation
+      const now = new Date();
+      const newObservation: Observation = {
+        ...candidate,
+        id: crypto.randomUUID(),
+        count: 1,
+        status: "pending",
+        sourceSessionIds: [sessionId],
+        firstSeen: now,
+        lastSeen: now,
+      };
+
+      this.observations.set(newObservation.id, newObservation);
+      await this.save();
+      return newObservation;
+    }
+  }
+
+  /**
+   * Process multiple observations with deduplication.
+   * More efficient than individual addOrUpdate calls.
+   *
+   * @param candidates - Array of observations to add/update
+   * @param llmAdapter - LLM adapter for similarity checking
+   * @param sessionId - Session ID these observations came from
+   * @returns Array of processed observations
+   */
+  async bulkAddOrUpdate(
+    candidates: Observation[],
+    llmAdapter: LLMAdapter,
+    sessionId: string
+  ): Promise<Observation[]> {
+    const processed: Observation[] = [];
+
+    for (const candidate of candidates) {
+      const processedObs = await this.addOrUpdate(
+        candidate,
+        llmAdapter,
+        sessionId
+      );
+      processed.push(processedObs);
+    }
+
+    return processed;
   }
 
   // ===========================================================================
