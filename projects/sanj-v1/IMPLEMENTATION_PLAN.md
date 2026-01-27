@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Waves 1-2 Complete)
-**Progress**: 9/55 tasks completed (16%)
+**Progress**: 10/55 tasks completed (18%)
 **Current Focus**: Wave 3 - CLI Commands Structure
-**Next Steps**: TASK-009 (CLERC integration and command registry)
+**Next Steps**: TASK-010 (sanj init command)
 
 ## Summary
 
@@ -206,7 +206,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
 
 ### JTBD-001: CLI Foundation
 
-- [ ] **TASK-009**: CLERC integration and command registry
+- [x] **TASK-009**: CLERC integration and command registry
   - **Dependencies**: TASK-001
   - **Deliverables**:
     - Install and configure CLERC
@@ -217,7 +217,22 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - CLERC initializes correctly
     - Commands can be registered
     - Help text generates
-  - **Files**: src/cli/registry.ts, src/cli/types.ts
+  - **Files**: src/cli/index.ts
+  - **Implementation Notes**:
+    - Created src/cli/index.ts with CLERC-based CLI entry point
+    - Used Cli() which automatically includes helpPlugin() and versionPlugin()
+    - Set scriptName to "sanj" and version to pkg.version (0.0.1)
+    - Implemented 6 command placeholders: init, analyze, review, status, config, cron
+    - All commands have proper descriptions for help text
+    - Help available via: sanj --help, sanj -h, or sanj help
+    - Version available via: sanj --version, sanj -v
+    - Unknown commands return exit code 1 with CLERC's built-in error handling
+    - Build produces dist/cli.js successfully
+    - All 187 existing tests still pass
+  - **Spec Tasks Completed**:
+    - TASK 001-002: Install CLERC and create CLI entry point
+    - TASK 001-003: Add help and version plugins
+    - TASK 001-004: Add not-found error handling
 
 - [ ] **TASK-010**: sanj init command
   - **Dependencies**: TASK-008, TASK-009
@@ -925,7 +940,7 @@ Update this section as tasks are completed:
 
 **Wave 1 (Foundation)**: 3/3 tasks completed (100%)
 **Wave 2 (Storage)**: 6/6 tasks completed (100%)
-**Wave 3 (CLI)**: 0/5 tasks completed
+**Wave 3 (CLI)**: 1/5 tasks completed (20%)
 **Wave 4 (Discovery)**: 0/6 tasks completed
 **Wave 5 (Patterns)**: 0/7 tasks completed
 **Wave 6 (Memory)**: 0/7 tasks completed
@@ -934,14 +949,14 @@ Update this section as tasks are completed:
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 9/55 tasks (16%)
+**Total Progress**: 10/55 tasks (18%)
 
 ---
 
 ## Next Actions
 
-**Immediate**: Begin Wave 3 (CLI Commands Structure)
-1. Implement TASK-009: CLERC integration and command registry
+**Immediate**: Continue Wave 3 (CLI Commands Structure)
+1. Implement TASK-010: sanj init command
 
 **Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
 - All core types implemented in src/core/types.ts
@@ -955,6 +970,9 @@ Update this section as tasks are completed:
 - TASK-006 (storage/interfaces.ts): Complete - Storage interface definitions for stores
 - TASK-007 (File-based storage): Complete - ObservationStore and MemoryStore with 162 passing tests
 - TASK-008 (First-time initialization): Complete - Initialization logic with 25 passing tests
+
+**Wave 3 Status**: IN PROGRESS (1/5 tasks, 20%)
+- TASK-009 (CLERC integration): Complete - CLI entry point with command placeholders and help/version support
 
 **Milestone 1**: Waves 1-3 complete (Basic CLI functional)
 **Milestone 2**: Waves 4-6 complete (Core analysis working)
@@ -989,6 +1007,25 @@ Update this section as tasks are completed:
 ---
 
 ## Recent Completions
+
+### TASK-009: CLERC Integration and Command Registry (Completed 2026-01-27)
+- **Implementation**: src/cli/index.ts
+- **Key Features**:
+  - CLERC-based CLI entry point with Cli() configuration
+  - Automatic inclusion of helpPlugin() and versionPlugin()
+  - Script name set to "sanj" with version from package.json (0.0.1)
+  - 6 command placeholders implemented: init, analyze, review, status, config, cron
+  - Each command has proper description for help text generation
+  - Help system accessible via: sanj --help, sanj -h, or sanj help
+  - Version display via: sanj --version, sanj -v
+  - Built-in error handling for unknown commands (exit code 1)
+- **Build Output**: dist/cli.js successfully generated
+- **Test Status**: All 187 existing tests passing
+- **Spec Tasks Completed**:
+  - TASK 001-002: Install CLERC and create CLI entry point
+  - TASK 001-003: Add help and version plugins
+  - TASK 001-004: Add not-found error handling
+- **Next Steps**: Ready for TASK-010 (sanj init command) to wire up initialization logic to CLI
 
 ### TASK-008: First-time Initialization Logic (Completed 2026-01-27)
 - **Implementation**: src/setup/init.ts
@@ -1071,4 +1108,4 @@ Update this section as tasks are completed:
 
 ---
 
-Last updated: 2026-01-27 (Wave 2 Complete - TASK-008 Initialization Logic)
+Last updated: 2026-01-27 (Wave 3 In Progress - TASK-009 CLERC Integration Complete)
