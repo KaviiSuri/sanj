@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Wave 1 Complete)
-**Progress**: 6/54 tasks completed (11%)
+**Progress**: 7/55 tasks completed (13%)
 **Current Focus**: Wave 2 - Storage Foundation
-**Next Steps**: TASK-006 (Storage interface definitions)
+**Next Steps**: TASK-007 (File-based storage implementation)
 
 ## Summary
 
@@ -131,7 +131,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
   - **Files**: src/storage/state.ts, tests/storage/state.test.ts
   - **Implementation Notes**: Implemented in src/storage/state.ts with 10 exported functions for state management. Uses Bun native file APIs (Bun.file, Bun.write) with atomic writes via temp file + rename pattern. Includes optional path parameter for testing isolation. Comprehensive test suite in tests/storage/state.test.ts with 32 passing tests covering all functions, edge cases, and error handling.
 
-- [ ] **TASK-006**: Storage interface definitions
+- [x] **TASK-006**: Storage interface definitions
   - **Dependencies**: TASK-003
   - **Deliverables**:
     - Define ISessionStore interface
@@ -142,6 +142,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Interfaces complete per spec
     - No implementation yet (just contracts)
   - **Files**: src/storage/interfaces.ts
+  - **Implementation Notes**: Implemented in src/storage/interfaces.ts with complete interface definitions. IObservationStore provides CRUD operations for observations with query/filter capabilities including session filtering, text search, and date ranges. IMemoryStore handles both LongTermMemory and CoreMemory with CRUD operations, query/filter by type and memory level, and promotion operations for upgrading observations. ISessionStore manages sessions with CRUD, query/filter capabilities, and cursor-based continuation. Base IStore interface provides common save/load/delete/query operations without generic type parameter (removed to avoid TypeScript unused variable warnings). All interfaces support atomic writes for data integrity.
 
 - [ ] **TASK-007**: File-based storage implementation
   - **Dependencies**: TASK-006
@@ -896,7 +897,7 @@ sanj/
 Update this section as tasks are completed:
 
 **Wave 1 (Foundation)**: 3/3 tasks completed (100%)
-**Wave 2 (Storage)**: 3/6 tasks completed (50%)
+**Wave 2 (Storage)**: 4/6 tasks completed (67%)
 **Wave 3 (CLI)**: 0/5 tasks completed
 **Wave 4 (Discovery)**: 0/6 tasks completed
 **Wave 5 (Patterns)**: 0/7 tasks completed
@@ -906,27 +907,27 @@ Update this section as tasks are completed:
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 6/55 tasks (11%)
+**Total Progress**: 7/55 tasks (13%)
 
 ---
 
 ## Next Actions
 
 **Immediate**: Continue Wave 2 (Storage Foundation)
-1. Implement TASK-006: Storage interface definitions
-2. Implement TASK-007: File-based storage implementation
-3. Implement TASK-008: First-time initialization logic
+1. Implement TASK-007: File-based storage implementation
+2. Implement TASK-008: First-time initialization logic
 
 **Wave 1 Status**: COMPLETE (3/3 tasks)
 - All core types implemented in src/core/types.ts
 - Foundation ready for storage layer development
 
-**Wave 2 Status**: IN PROGRESS (3/6 tasks, 50%)
+**Wave 2 Status**: IN PROGRESS (4/6 tasks, 67%)
 - TASK-002-001 (storage/paths.ts): Complete - Path resolution utilities implemented
 - TASK-004 (Config schema): Complete - Default config with LLM, adapters, and thresholds
 - TASK-005 (Config file operations): Complete - Atomic read/write with error handling
 - TASK-003-010 (storage/state.ts): Complete - Analysis state management with 32 passing tests
-- Next: Storage interface definitions (TASK-006)
+- TASK-006 (storage/interfaces.ts): Complete - Storage interface definitions for stores
+- Next: File-based storage implementation (TASK-007)
 
 **Milestone 1**: Waves 1-3 complete (Basic CLI functional)
 **Milestone 2**: Waves 4-6 complete (Core analysis working)
@@ -975,6 +976,23 @@ Update this section as tasks are completed:
   - Comprehensive error handling and edge case coverage
 - **Test Coverage**: All functions tested with success cases, edge cases, and error scenarios
 - **Notes**: Provides foundation for analysis state tracking before implementing storage interfaces
+
+### TASK-006: Storage Interface Definitions (Completed 2026-01-27)
+- **Implementation**: src/storage/interfaces.ts
+- **Features**:
+  - IObservationStore interface with complete CRUD operations for observations
+  - IMemoryStore interface supporting both LongTermMemory and CoreMemory types
+  - ISessionStore interface for session management with cursor-based continuation
+  - Query and filter capabilities across all store types
+  - Promotion operations for upgrading observations to long-term memories
+  - Atomic write support for data integrity
+- **Key Design Decisions**:
+  - Base IStore interface provides common save/load/delete/query operations
+  - Generic type parameter removed from IStore to avoid TypeScript unused variable warnings
+  - IObservationStore supports session filtering, text search, and date range queries
+  - IMemoryStore supports querying by memory type (LongTerm vs Core) and memory level
+  - ISessionStore supports cursor-based continuation for incremental processing
+- **Notes**: Pure interface definitions with no implementation - establishes contracts for file-based storage layer
 
 ---
 
