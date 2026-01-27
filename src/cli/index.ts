@@ -26,9 +26,9 @@ Cli()
 
   // Command: analyze - Analyze recent coding sessions
   .command("analyze", "Analyze recent coding sessions")
-  .on("analyze", (ctx) => {
-    console.log("sanj analyze - Not yet implemented");
-    console.log("This command will analyze Claude Code sessions and extract patterns.");
+  .on("analyze", async (ctx: any) => {
+    const { handleAnalyze } = await import('./commands/analyze.ts');
+    await handleAnalyze(ctx);
   })
 
   // Command: review - Review and approve pending observations

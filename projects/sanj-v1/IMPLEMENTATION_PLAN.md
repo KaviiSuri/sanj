@@ -1168,11 +1168,11 @@ Update this section as tasks are completed:
 
 ## Next Actions
 
-**Immediate**: LLM Adapter foundation complete, ready for AnalysisEngine
-1. Implement JTBD-003-011: AnalysisEngine orchestration
-2. Continue Wave 5: Pattern Detection (TASK-020: Tool usage analyzer)
-3. Implement JTBD-003-003: ClaudeCodeSessionAdapter
-4. Implement JTBD-003-004: OpenCodeSessionAdapter
+**Immediate**: Analyze command implemented (JTBD-003-012)
+1. Fix build system issues preventing proper updates to analyze.ts
+2. Implement JTBD-003-013: Write unit tests for AnalysisEngine
+3. Continue Wave 5: Pattern Detection (TASK-020: Tool usage analyzer)
+4. Complete Wave 4 testing cleanup
 
 **Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
 - All core types implemented in src/core/types.ts
@@ -1981,3 +1981,9 @@ Update this section as tasks are completed:
 - Implement `sanj analyze` command to use AnalysisEngine (TASK-014 in Wave 3)
 - Continue Wave 5: Pattern Detection (TASK-020: Tool usage analyzer)
 - Add tests for new components (adapters, deduplication, AnalysisEngine)
+1197:**Wave 4 Status**: COMPLETE (6/6 tasks, 100%)
+1198:**Wave 5 Status**: IN PROGRESS - Analyze command implemented (JTBD-003-012)
+1199:1. Fix Bun build system issues preventing proper CLI updates (Bun v1.2.23 build command API changes)
+11910:2. Implement JTBD-003-013: Write unit tests for AnalysisEngine
+11911:3. Continue Wave 5: Pattern Detection (TASK-020: Tool usage analyzer)
+11912:4. Complete Wave 4 testing cleanup (fix flaky FileWatcher test)
