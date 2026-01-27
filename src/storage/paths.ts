@@ -73,6 +73,18 @@ export const LONG_TERM_MEMORY_PATH = join(SANJ_HOME, "long-term-memory.md");
 export const STATE_PATH = join(SANJ_HOME, "state.json");
 
 /**
+ * Sessions storage file path
+ * Location: ~/.sanj/sessions.json
+ *
+ * Stores indexed session metadata for fast querying.
+ * Includes session IDs, timestamps, tool types, and message counts.
+ *
+ * Used by: SessionStore (storage/session-store.ts)
+ * @example "/Users/username/.sanj/sessions.json"
+ */
+export const SESSIONS_PATH = join(SANJ_HOME, "sessions.json");
+
+/**
  * Logs directory path
  * Location: ~/.sanj/logs/
  *
@@ -100,5 +112,6 @@ export default {
   OBSERVATIONS_PATH,
   LONG_TERM_MEMORY_PATH,
   STATE_PATH,
+  SESSIONS_PATH,
   LOGS_DIR,
 };

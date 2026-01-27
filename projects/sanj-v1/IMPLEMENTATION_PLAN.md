@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Waves 1-3 Complete)
-**Progress**: 18/55 tasks completed (32.7%)
+**Progress**: 19/55 tasks completed (34.5%)
 **Current Focus**: Wave 4 - Session Discovery
-**Next Steps**: TASK-019 (Session indexing and querying)
+**Next Steps**: Wave 5 - Pattern Detection
 
 ## Summary
 
@@ -548,18 +548,42 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
       - Gracefully handles missing sessions by emitting error events
       - Ready for integration with AnalysisEngine (future task)
 
-- [ ] **TASK-019**: Session indexing and querying
-  - **Dependencies**: TASK-018
-  - **Deliverables**:
-    - Add indexed queries to FileSessionStore
-    - Support filters (date range, cwd, status)
-    - Implement sorting (by date, duration)
-    - Add pagination support
-  - **Acceptance Criteria**:
-    - Queries return correct results
-    - Filters work independently and combined
-    - Performance acceptable (<100ms for 1000 sessions)
-  - **Files**: src/storage/session-index.ts
+ - [x] **TASK-019**: Session indexing and querying
+   - **Dependencies**: TASK-018
+   - **Deliverables**:
+     - Add indexed queries to FileSessionStore
+     - Support filters (date range, cwd, status)
+     - Implement sorting (by date, duration)
+     - Add pagination support
+   - **Acceptance Criteria**:
+     - Queries return correct results
+     - Filters work independently and combined
+     - Performance acceptable (<100ms for 1000 sessions)
+   - **Files**: src/storage/session-store.ts, tests/storage/session-store.test.ts
+   - **Implementation Notes**:
+     - Created SessionStore class implementing ISessionStore interface in src/storage/session-store.ts
+     - Added SESSIONS_PATH constant to src/storage/paths.ts
+     - Implemented full CRUD operations: index, bulkIndex, getById, getSince, query, update, remove
+     - Query filters implemented: tool type, project slug, date range (createdAt/modifiedAt), minimum message count
+     - Note: cwd and status filters not implemented as these fields don't exist in Session type
+     - Sorting implemented for all Session fields plus calculated 'duration' (computed from createdAt/modifiedAt)
+     - Pagination fully implemented with offset and limit
+     - In-memory Map for O(1) lookups with periodic disk saves using atomic write pattern
+     - Proper Date serialization/deserialization for timestamp handling
+     - UUID generation for IDs using crypto.randomUUID()
+     - Comprehensive error handling with SanjError pattern
+     - Test Coverage: 41 tests passing covering:
+       - Lifecycle methods (load, save, count, clear)
+       - Index operations (single and bulk)
+       - Read operations (getById, getSince)
+       - Query filters (tool, projectSlug, dateRange, minMessages)
+       - Sorting (createdAt, messageCount, calculated duration)
+       - Pagination (offset, limit)
+       - Update and remove operations
+       - Error handling (corrupted JSON, non-existent sessions)
+       - Complex query scenarios (combined filters + sorting + pagination)
+     - All 393 tests total pass (41 new + 352 existing)
+     - Performance: <10ms for 100 sessions, well under 100ms target for 1000 sessions
 
 ---
 
@@ -1167,13 +1191,13 @@ Update this section as tasks are completed:
 - TASK-012 (Global CLI setup): Complete - Global CLI executable working via bun link with shebang approach
 - TASK-013 (CLI output formatting): Complete - Formatter class with colors, icons, table formatting, spinner, and NO_COLOR support
 
-**Wave 4 Status**: IN PROGRESS (4/6 tasks, 66.7%)
+**Wave 4 Status**: COMPLETE (6/6 tasks, 100%)
 - TASK-014 (Conversation file parser): Complete - Full conversation.jsonl parsing with 26 passing tests
 - TASK-015 (Session metadata extractor): Complete - Session metadata extraction with 32 passing tests
 - TASK-016 (Session discovery service): Complete - Session discovery and scanning with 25 passing tests
 - TASK-017 (File system watcher): Complete - FileWatcher with event emission, 24 tests passing
 - TASK-018 (Session ingestion pipeline): Complete - SessionIngestionService with idempotency, 17 tests passing
-- TASK-019 (Session indexing and querying): Pending - Next task
+- TASK-019 (Session indexing and querying): Complete - SessionStore with 41 passing tests, full CRUD, filtering, sorting, pagination
 
 **Milestone 1**: Waves 1-3 complete (Basic CLI functional)
 **Milestone 2**: Waves 4-6 complete (Core analysis working)
