@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-**Status**: Pre-implementation (Greenfield Project)
-**Progress**: 1/54 tasks completed (2%)
-**Current Focus**: Wave 1 - Foundation Setup
-**Next Steps**: Begin with TASK-001 (Project scaffolding) and TASK-002 (Error handling framework)
+**Status**: In Progress (Wave 1 Complete)
+**Progress**: 3/54 tasks completed (6%)
+**Current Focus**: Wave 2 - Storage Foundation
+**Next Steps**: Begin TASK-004 (Config schema and default values)
 
 ## Summary
 
@@ -39,7 +39,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - ESM output verified
   - **Files**: package.json, tsconfig.json, src/index.ts
 
-- [ ] **TASK-002**: Core error handling framework
+- [x] **TASK-002**: Core error handling framework
   - **Dependencies**: TASK-001
   - **Deliverables**:
     - Create AppError base class with error codes
@@ -50,9 +50,10 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Error hierarchy works with instanceof checks
     - Error codes map correctly
     - Stack traces preserved
-  - **Files**: src/lib/errors.ts
+  - **Files**: src/core/types.ts (implemented as SanjError class)
+  - **Note**: Implemented in src/core/types.ts instead of src/lib/errors.ts as specified in jtbd-003-task-001
 
-- [ ] **TASK-003**: Core domain models (Pattern, Session, Memory)
+- [x] **TASK-003**: Core domain models (Pattern, Session, Memory)
   - **Dependencies**: TASK-002
   - **Deliverables**:
     - Define Pattern type (id, type, description, count, etc.)
@@ -63,7 +64,8 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Types compile without errors
     - All fields match spec
     - Enums for MemoryLevel work correctly
-  - **Files**: src/domain/types.ts
+  - **Files**: src/core/types.ts
+  - **Note**: Implemented in src/core/types.ts instead of src/domain/types.ts as specified in jtbd-003-task-001. Includes Session, Message, Observation, ExtractionResult, SimilarityResult, LongTermMemory, CoreMemory, Config, AnalysisState, and all adapter result types.
 
 ---
 
@@ -863,7 +865,7 @@ sanj/
 
 Update this section as tasks are completed:
 
-**Wave 1 (Foundation)**: 1/3 tasks completed
+**Wave 1 (Foundation)**: 3/3 tasks completed (100%)
 **Wave 2 (Storage)**: 0/5 tasks completed
 **Wave 3 (CLI)**: 0/5 tasks completed
 **Wave 4 (Discovery)**: 0/6 tasks completed
@@ -874,19 +876,21 @@ Update this section as tasks are completed:
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 1/54 tasks (2%)
+**Total Progress**: 3/54 tasks (6%)
 
 ---
 
 ## Next Actions
 
-**Immediate**: Start Wave 1
-1. Run `pnpm init` to create package.json
-2. Install TypeScript and build tools
-3. Create src/ directory structure
-4. Implement TASK-001 (scaffolding)
+**Immediate**: Begin Wave 2 (Storage Foundation)
+1. Implement TASK-004: Config schema and default values
+2. Implement TASK-005: Config file operations (read/write)
+3. Implement TASK-006: Storage interface definitions
 
-**After Wave 1**: Begin Wave 2 (Storage Foundation)
+**Wave 1 Status**: COMPLETE (3/3 tasks)
+- All core types implemented in src/core/types.ts
+- Foundation ready for storage layer development
+
 **Milestone 1**: Waves 1-3 complete (Basic CLI functional)
 **Milestone 2**: Waves 4-6 complete (Core analysis working)
 **Milestone 3**: Waves 7-8 complete (TUI functional)
@@ -896,10 +900,19 @@ Update this section as tasks are completed:
 
 ## Notes and Blockers
 
-- None yet (greenfield project)
-- Add blockers, questions, or deviations here as development progresses
-- Track technical debt and refactoring needs
+### Implementation Deviations
+
+**Wave 1 - File Structure Consolidation**:
+- TASK-002 and TASK-003 were implemented together in `src/core/types.ts` instead of separate files (`src/lib/errors.ts` and `src/domain/types.ts`)
+- This follows the actual spec file (jtbd-003-task-001) which consolidates all core types in one location
+- The consolidation includes:
+  - SanjError class and ErrorCode enum (originally planned for src/lib/errors.ts)
+  - Session, Message, Observation types (originally planned for src/domain/types.ts)
+  - Memory types: LongTermMemory, CoreMemory (originally planned for src/domain/types.ts)
+  - Additional types: ExtractionResult, SimilarityResult, Config, AnalysisState
+  - All adapter result types for external services
+- **Rationale**: Consolidating related types in one file reduces circular dependencies and improves maintainability for this stage of development
 
 ---
 
-Last updated: 2026-01-26
+Last updated: 2026-01-27
