@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Waves 1-3 Complete)
-**Progress**: 14/55 tasks completed (25.5%)
+**Progress**: 15/55 tasks completed (27.3%)
 **Current Focus**: Wave 4 - Session Discovery
-**Next Steps**: TASK-014 (Conversation file parser)
+**Next Steps**: TASK-015 (Session metadata extractor)
 
 ## Summary
 
@@ -361,7 +361,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
 
 ### JTBD-003: Session Analysis
 
-- [ ] **TASK-014**: Conversation file parser
+- [x] **TASK-014**: Conversation file parser
   - **Dependencies**: TASK-003
   - **Deliverables**:
     - Parse conversation.jsonl format
@@ -372,7 +372,27 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Valid JSONL parses correctly
     - Malformed lines skipped gracefully
     - Message sequence preserved
-  - **Files**: src/parsers/conversation.ts
+  - **Files**: src/parsers/conversation.ts, tests/parsers/conversation.test.ts
+  - **Implementation Notes**:
+    - Created src/parsers/conversation.ts with full conversation.jsonl parsing capabilities
+    - Implemented parseConversation() function to parse JSONL format line-by-line
+    - Implemented parseConversationFile() to read and parse from file path
+    - Implemented buildRawContent() utility to format messages for LLM analysis
+    - Handles both string and array-based content formats (text blocks and tool use blocks)
+    - Gracefully handles malformed JSON lines by skipping and continuing to next line
+    - Extracts messages, timestamps, sessionId, cwd, and metadata from conversation files
+    - Preserves message sequence and timestamps for chronological analysis
+    - Test Coverage: 26 comprehensive tests covering valid JSONL parsing, malformed input handling, array content extraction, and real-world format scenarios
+    - All 26 tests pass successfully
+    - Full test suite still passes: 247 tests total (221 + 26 new)
+    - Key Features:
+      - Parses conversation.jsonl files from Claude Code sessions
+      - Extracts user and assistant messages with timestamps and role information
+      - Handles array-based content with text blocks and tool use blocks
+      - Gracefully skips malformed lines without crashing the parser
+      - Extracts session metadata (sessionId, cwd, createdAt, modifiedAt)
+      - Provides buildRawContent() utility for preparing content for LLM analysis
+      - Comprehensive error handling with try-catch for file operations
 
 - [ ] **TASK-015**: Session metadata extractor
   - **Dependencies**: TASK-014
@@ -1007,7 +1027,7 @@ Update this section as tasks are completed:
 **Wave 1 (Foundation)**: 3/3 tasks completed (100%)
 **Wave 2 (Storage)**: 6/6 tasks completed (100%)
 **Wave 3 (CLI)**: 5/5 tasks completed (100%)
-**Wave 4 (Discovery)**: 0/6 tasks completed
+**Wave 4 (Discovery)**: 1/6 tasks completed (16.7%)
 **Wave 5 (Patterns)**: 0/7 tasks completed
 **Wave 6 (Memory)**: 0/7 tasks completed
 **Wave 7 (TUI Foundation)**: 0/7 tasks completed
@@ -1015,14 +1035,14 @@ Update this section as tasks are completed:
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 14/55 tasks (25.5%)
+**Total Progress**: 15/55 tasks (27.3%)
 
 ---
 
 ## Next Actions
 
-**Immediate**: Start Wave 4 (Session Discovery)
-1. Implement TASK-014: Conversation file parser
+**Immediate**: Continue Wave 4 (Session Discovery)
+1. Implement TASK-015: Session metadata extractor
 
 **Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
 - All core types implemented in src/core/types.ts
@@ -1077,6 +1097,44 @@ Update this section as tasks are completed:
 ---
 
 ## Recent Completions
+
+### TASK-014: Conversation File Parser (Completed 2026-01-27)
+- **Implementation**: src/parsers/conversation.ts
+- **Tests**: tests/parsers/conversation.test.ts (26 tests passing)
+- **Key Features**:
+  - Full conversation.jsonl parsing for Claude Code sessions
+  - parseConversation() function to parse JSONL format line-by-line
+  - parseConversationFile() to read and parse from file path
+  - buildRawContent() utility to format messages for LLM analysis
+  - Handles both string and array-based content formats
+  - Text blocks and tool use blocks extracted from array content
+  - Gracefully handles malformed JSON lines (skips and continues)
+  - Extracts messages, timestamps, sessionId, cwd, and metadata
+  - Preserves message sequence and timestamps for chronological analysis
+- **Test Coverage**: 26 comprehensive tests covering:
+  - Valid JSONL parsing with multiple messages
+  - Malformed input handling (skips invalid lines)
+  - Array content extraction (text blocks and tool use)
+  - Real-world conversation format scenarios
+  - Session metadata extraction (sessionId, cwd, timestamps)
+  - buildRawContent() formatting for LLM analysis
+  - File reading and parsing integration
+  - All 26 tests pass successfully
+  - Full test suite: 247 tests total (221 + 26 new)
+- **All Acceptance Criteria Met**:
+  - ✅ Valid JSONL parses correctly with all messages extracted
+  - ✅ Malformed lines skipped gracefully without crashing
+  - ✅ Message sequence preserved with chronological timestamps
+- **Key Implementation Details**:
+  - Parses conversation.jsonl files from Claude Code sessions (~/.claude/*)
+  - Extracts user and assistant messages with role, content, and timestamps
+  - Handles both simple string content and complex array-based content
+  - Array content includes text blocks and tool use blocks with names and inputs
+  - Session metadata includes sessionId, cwd, createdAt, modifiedAt
+  - buildRawContent() formats messages as "role: content" for LLM analysis
+  - Comprehensive error handling with try-catch for file operations
+  - Graceful degradation: skips malformed lines and continues parsing
+- **Next Steps**: Ready for TASK-015 (Session metadata extractor) to build on parsed conversation data
 
 ### TASK-013: CLI Output Formatting Utilities (Completed 2026-01-27)
 - **Implementation**: src/cli/formatter.ts
@@ -1306,4 +1364,4 @@ Update this section as tasks are completed:
 
 ---
 
-Last updated: 2026-01-27 (Wave 3 Complete - Ready for Wave 4 Session Discovery)
+Last updated: 2026-01-27 (Wave 4 Started - TASK-014 Complete, 1/6 tasks done)
