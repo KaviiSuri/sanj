@@ -1143,6 +1143,34 @@ Update this section as tasks are completed:
 
 ## Recent Completions
 
+### 003-002: SessionAdapter Interface (Completed 2026-01-27)
+- **Implementation**: src/adapters/session/SessionAdapter.ts
+- **Tests**: tests/adapters/session-adapter.test.ts (7 tests passing)
+- **Key Features Implemented**:
+  - Session interface with all required fields: id, toolName, projectPath, timestamp, content, filePath
+  - SessionAdapter interface with name, isAvailable(), getSessions() methods
+  - Full TypeScript type safety with no `any` types
+  - Complete JSDoc documentation for all interfaces and methods
+- **Test Coverage**: 7 comprehensive tests covering:
+  - Session interface with all required fields
+  - Session interface with optional projectPath
+  - SessionAdapter interface with required methods
+  - Async return types enforcement
+  - Optional since parameter support
+  - Multiple adapter implementations support (Claude Code, OpenCode examples)
+- **All Acceptance Criteria Met**:
+  - ✅ SessionAdapter interface is defined in src/adapters/session/SessionAdapter.ts
+  - ✅ Session interface is defined with all required fields
+  - ✅ All interfaces and methods have JSDoc comments
+  - ✅ File compiles without TypeScript errors
+  - ✅ Interface is exported and can be imported by adapter implementations
+  - ✅ No `any` types used anywhere in interfaces
+- **Integration Points**:
+  - Blocks JTBD-003-003 (ClaudeCodeSessionAdapter implementation)
+  - Blocks JTBD-003-004 (OpenCodeSessionAdapter implementation)
+  - Foundation for JTBD-003-011 (AnalysisEngine orchestration)
+- **Next Steps**: Ready for adapter implementations (ClaudeCodeSessionAdapter, OpenCodeSessionAdapter) to implement the interface
+
 ### TASK-016: Session Discovery Service (Completed 2026-01-27)
 - **Implementation**: src/services/session-discovery.ts
 - **Tests**: tests/services/session-discovery.test.ts (25 tests passing)
