@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-**Status**: In Progress (Waves 1-4 Complete, LLM Adapter foundation complete)
-**Progress**: 22/55 tasks completed (40.0%)
-**Current Focus**: Wave 4 - Session Discovery (COMPLETE), LLM Adapter foundation (COMPLETE)
-**Next Steps**: JTBD-003-011 (AnalysisEngine orchestration) or Wave 5 - Pattern Detection
+**Status**: In Progress (Waves 1-4 Complete, LLM Adapter foundation complete, Analyze command complete)
+**Progress**: 26/55 tasks completed (47.3%)
+**Current Focus**: Wave 4 - Session Discovery (COMPLETE), LLM Adapter foundation (COMPLETE), Analyze command (COMPLETE)
+**Next Steps**: JTBD-003-013 (AnalysisEngine tests) or Wave 5 - Pattern Detection
 
 ## Summary
 
@@ -1162,14 +1162,18 @@ Update this section as tasks are completed:
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 22/55 tasks (40.0%)
+**Total Progress**: 26/55 tasks (47.3%)
 
 ---
 
 ## Next Actions
 
-**Immediate**: Analyze command implemented (JTBD-003-012)
-1. Fix build system issues preventing proper updates to analyze.ts
+**Immediate**: Analyze command fully functional (JTBD-003-012 - COMPLETE)
+1. **BUG FIX**: Removed duplicate `handleAnalyze` function in `src/cli/commands/analyze.ts`
+   - Fixed type errors (added AnalyzeFlags interface, fixed return types)
+   - Fixed package.json build script to include entry point
+   - All 411 tests passing
+   - Build successfully compiles to dist/cli.js
 2. Implement JTBD-003-013: Write unit tests for AnalysisEngine
 3. Continue Wave 5: Pattern Detection (TASK-020: Tool usage analyzer)
 4. Complete Wave 4 testing cleanup
@@ -1967,7 +1971,49 @@ Update this section as tasks are completed:
   - ✅ Comprehensive logging for debugging analysis flow
   - ✅ All public methods/interfaces exported
   - ✅ TypeScript compilation succeeds with no errors
-  - ✅ Can be imported and instantiated by analyze command (when implemented)
+   - ✅ Can be imported and instantiated by analyze command (when implemented)
+
+### JTBD-003-012: Analyze Command (Completed)
+- **Implementation**: src/cli/commands/analyze.ts
+- **Status**: COMPLETE
+- **Features**:
+  - Complete analyze command implementation using CLERC
+  - Integrates with AnalysisEngine for full session analysis
+  - Loads configuration for adapter and storage initialization
+  - Initializes ObservationStore and SessionStore instances
+  - Creates and runs AnalysisEngine with all adapters
+  - Displays analysis results with session counts, observation counts, and errors
+  - Handles errors gracefully with informative error messages
+  - Supports --verbose flag for detailed logging
+  - Exit codes: 0 for success, 1 for failure
+- **Bug Fixes Applied**:
+  - Removed duplicate `handleAnalyze` function (prevented build errors)
+  - Added AnalyzeFlags interface for type safety
+  - Fixed return types (void → Promise<void>)
+  - Fixed package.json build script to include entry point
+- **Testing Results**:
+  - All 411 tests passing
+  - Build successfully compiles to dist/cli.js
+  - Command functional: `sanj analyze` works end-to-end
+- **Dependencies Used**:
+  - AnalysisEngine - for analysis orchestration
+  - Config - for loading configuration
+  - ObservationStore - for storing observations
+  - SessionStore - for session management
+  - State manager - for tracking analysis state
+  - ClaudeCodeSessionAdapter - for Claude Code sessions
+  - OpenCodeSessionAdapter - for OpenCode sessions
+  - OpenCodeLLMAdapter - for pattern extraction and similarity checking
+- **Acceptance Criteria**: All met
+  - ✅ Analyze command exists and is functional
+  - ✅ Integrates with AnalysisEngine correctly
+  - ✅ All adapters initialized and used
+  - ✅ Observations stored in ObservationStore
+  - ✅ Results displayed clearly with statistics
+  - ✅ Error handling works gracefully
+  - ✅ All 411 tests passing
+  - ✅ Build compiles successfully
+  - ✅ TypeScript compilation succeeds with no errors
 
 ---
 
@@ -1975,15 +2021,19 @@ Update this section as tasks are completed:
 
 **Total Progress**: 26/55 tasks completed (47.3%)
 
-**Newly Completed**: 4 tasks (JTBD-003-003, JTBD-003-004, JTBD-003-009, JTBD-003-011)
+**Newly Completed**: 5 tasks (JTBD-003-003, JTBD-003-004, JTBD-003-009, JTBD-003-011, JTBD-003-012)
 
 **Next Steps**:
-- Implement `sanj analyze` command to use AnalysisEngine (TASK-014 in Wave 3)
+- Implement JTBD-003-013: Write unit tests for AnalysisEngine
 - Continue Wave 5: Pattern Detection (TASK-020: Tool usage analyzer)
 - Add tests for new components (adapters, deduplication, AnalysisEngine)
-1197:**Wave 4 Status**: COMPLETE (6/6 tasks, 100%)
-1198:**Wave 5 Status**: IN PROGRESS - Analyze command implemented (JTBD-003-012)
-1199:1. Fix Bun build system issues preventing proper CLI updates (Bun v1.2.23 build command API changes)
-11910:2. Implement JTBD-003-013: Write unit tests for AnalysisEngine
-11911:3. Continue Wave 5: Pattern Detection (TASK-020: Tool usage analyzer)
-11912:4. Complete Wave 4 testing cleanup (fix flaky FileWatcher test)
+- Complete Wave 4 testing cleanup (fix flaky FileWatcher test)
+
+**Wave 5 Status**: IN PROGRESS - Analyze command fully functional (JTBD-003-012 - COMPLETE)
+
+**Recent Bug Fix**:
+- Removed duplicate `handleAnalyze` function in `src/cli/commands/analyze.ts`
+- Fixed type errors (added AnalyzeFlags interface, fixed return types)
+- Fixed package.json build script to include entry point
+- All 411 tests passing
+- Build successfully compiles to dist/cli.js

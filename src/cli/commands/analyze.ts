@@ -27,6 +27,15 @@ import { OpenCodeLLMAdapter } from '../../adapters/llm/OpenCodeLLM';
 import { ObservationStore } from '../../storage/observation-store';
 
 /**
+ * Flags for the analyze command.
+ */
+interface AnalyzeFlags {
+  verbose?: boolean;
+  'no-write-state'?: boolean;
+  since?: string;
+}
+
+/**
  * Log file path for analysis output.
  */
 const ANALYZE_LOG_PATH = join(SANJ_HOME, 'logs', 'analyze.log');
@@ -71,143 +80,6 @@ function logAndPrint(verbose: boolean, level: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR
       'ERROR': '✗',
     };
     console.log(`${levelIcon[level]} ${message}`);
-  }
-}
-
-/**
- * Handle analyze command.
- *
- * @param ctx - Command context with flags
- */
-export async function handleAnalyze(ctx: any): Promise<void> {
-  const flags = ctx || {};
-  const verbose = flags.verbose || false;
-  const noWriteState = flags['no-write-state'] === true;
-
-  // Initialize logging
-  log('INFO', 'Analysis started');
-
-  try {
-    // Load configuration
-    let config: Config;
-    try {
-      config = await readConfig();
-      logAndPrint(verbose, 'INFO', 'Configuration loaded');
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      logAndPrint(verbose, 'ERROR', `Failed to load configuration: ${errorMsg}`);
-      console.error('Run `sanj init` to set up your configuration.');
-      process.exit(1);
-    }
-
-    // Check if config has been initialized
-    if (!existsSync(join(SANJ_HOME, 'config.json'))) {
-      logAndPrint(verbose, 'ERROR', 'Configuration file not found');
-      console.error('Run `sanj init` first to initialize Sanj.');
-      process.exit(1);
-    }
-
-    // Load state to get last analysis run
-    const state = await getState();
-    const lastRun = state.lastAnalysisRun;
-
-    // Create session adapters based on config
-    const sessionAdapters = [
-      new ClaudeCodeSessionAdapter(),
-      new OpenCodeSessionAdapter(),
-    ];
-
-    // Filter adapters based on config
-    const enabledAdapters = sessionAdapters.filter((adapter) => {
-      const adapterKey = adapter.name === 'claude-code' ? 'claudeCode' : 'opencode';
-      const isEnabled = (config as any).sessionAdapters?.[adapterKey]?.enabled !== false;
-      return isEnabled;
-    });
-
-    if (enabledAdapters.length === 0) {
-      logAndPrint(verbose, 'ERROR', 'No session adapters enabled');
-      console.error('Enable at least one session adapter in config.');
-      process.exit(1);
-    }
-
-    logAndPrint(verbose, 'INFO', `Enabled session adapters: ${enabledAdapters.map((a) => a.name).join(', ')}`);
-
-    // Create LLM adapter
-    const llmAdapter = new OpenCodeLLMAdapter(config.llmAdapter.model);
-
-    // Check if LLM adapter is available
-    const llmAvailable = await llmAdapter.isAvailable();
-    if (!llmAvailable) {
-      logAndPrint(verbose, 'ERROR', `LLM adapter not available: ${llmAdapter.name}`);
-      console.error('Check that the configured LLM tool is installed and accessible.');
-      process.exit(1);
-    }
-
-    logAndPrint(verbose, 'INFO', `Using LLM adapter: ${llmAdapter.name}`);
-
-    // Create observation store
-    const observationStore = new ObservationStore();
-
-    // Create analysis engine
-    const engine = new AnalysisEngine(
-      config,
-      sessionAdapters,
-      llmAdapter,
-      observationStore,
-      {
-        getLastAnalysisRun: () => Promise.resolve(lastRun || null),
-        updateLastAnalysisRun: async (timestamp: Date) => {
-          if (!noWriteState) {
-            await updateLastAnalysisRun();
-          }
-        },
-      },
-    );
-
-    logAndPrint(verbose, 'INFO', 'Running analysis...');
-
-    // Run analysis
-    const result: AnalysisResult = await engine.run();
-
-    // Log detailed results
-    log('INFO', `Analysis complete: ${result.status}`);
-    log('INFO', `Sessions processed: ${result.sessionsProcessed}`);
-    log('INFO', `Sessions failed: ${result.sessionsFailed}`);
-    log('INFO', `Observations created: ${result.observationsCreated}`);
-    log('INFO', `Observations bumped: ${result.observationsBumped}`);
-    log('INFO', `Duration: ${(result.durationMs / 1000).toFixed(2)}s`);
-
-    if (result.errors.length > 0) {
-      log('WARN', `${result.errors.length} errors encountered`);
-      result.errors.forEach((error, index) => {
-        log('WARN', `Error ${index + 1}: ${error.adapter} - ${error.reason}`);
-      });
-    }
-
-    // Update observation count in state
-    try {
-      const allObservations = await observationStore.getAll();
-      await updateObservationCount(allObservations.length);
-      logAndPrint(verbose, 'INFO', `Updated observation count: ${allObservations.length}`);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      logAndPrint(verbose, 'WARN', `Failed to update observation count: ${errorMsg}`);
-    }
-
-    // Print summary to user
-    printSummary(result, verbose);
-
-    // Check overall status and exit appropriately
-    if (result.status === 'failure') {
-      process.exit(1);
-    }
-
-    process.exit(0);
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    logAndPrint(verbose, 'ERROR', `Analysis failed: ${errorMsg}`);
-    console.error(`Check ${ANALYZE_LOG_PATH} for details.`);
-    process.exit(1);
   }
 }
 
@@ -307,8 +179,8 @@ export async function handleAnalyze(ctx: any): Promise<void> {
       llmAdapter,
       observationStore,
       {
-        getLastAnalysisRun: () => Promise.resolve(lastRun || null),
-        updateLastAnalysisRun: async (timestamp: Date) => {
+        getLastAnalysisRun: () => lastRun || null,
+        updateLastAnalysisRun: async (_timestamp: Date) => {
           if (!noWriteState) {
             await updateLastAnalysisRun();
           }
@@ -319,7 +191,7 @@ export async function handleAnalyze(ctx: any): Promise<void> {
     logAndPrint(verbose, 'INFO', 'Running analysis...');
 
     // Run analysis
-    const result: AnalysisResult = await engine.run({ since: effectiveSince ? effectiveSince : null });
+    const result: AnalysisResult = await engine.run({ since: effectiveSince || undefined });
 
     // Log detailed results
     log('INFO', `Analysis complete: ${result.status}`);

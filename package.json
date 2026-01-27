@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "bun src/cli/index.ts",
-    "build": "bun build --target bun --outfile dist/cli.js",
+    "build": "bun build --target bun --outfile dist/cli.js src/cli/index.ts",
     "test": "bun test",
     "start": "bun dist/cli.js"
   },
