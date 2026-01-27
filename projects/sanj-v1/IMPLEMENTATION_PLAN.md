@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Waves 1-3 Complete)
-**Progress**: 16/55 tasks completed (29.1%)
+**Progress**: 17/55 tasks completed (30.9%)
 **Current Focus**: Wave 4 - Session Discovery
-**Next Steps**: TASK-016 (Session discovery service)
+**Next Steps**: TASK-017 (File system watcher)
 
 ## Summary
 
@@ -420,7 +420,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
       - ✅ Handles missing fields gracefully (defaults and validation)
     - **Test Coverage**: 32 comprehensive tests covering all functions and edge cases
 
-- [ ] **TASK-016**: Session discovery service
+- [x] **TASK-016**: Session discovery service
   - **Dependencies**: TASK-015, TASK-007
   - **Deliverables**:
     - Create SessionDiscoveryService
@@ -431,7 +431,38 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Finds all valid sessions
     - Ignores invalid directories
     - Returns Session[] array
-  - **Files**: src/services/session-discovery.ts
+  - **Files**: src/services/session-discovery.ts, tests/services/session-discovery.test.ts
+  - **Implementation Notes**:
+    - **Files Created**: src/services/session-discovery.ts, tests/services/session-discovery.test.ts
+    - **Key Features**:
+      - Recursive directory scanning of ~/.claude for session detection
+      - Filtering based on .claudesettings.local.json presence for valid sessions
+      - Integration with conversation parser (TASK-014) and session metadata extractor (TASK-015)
+      - Graceful handling of missing or malformed conversation files
+      - Comprehensive error handling for inaccessible directories
+    - **Key Functions**:
+      - `discoverSessions()`: Main function to discover all sessions in ~/.claude directory
+      - `isClaudeDirectoryAccessible()`: Validates that ~/.claude exists and is accessible
+      - `countSessions()`: Returns count of valid sessions without full parsing (performance optimization)
+    - **Error Handling**:
+      - Graceful handling of missing .claudesettings.local.json files
+      - Graceful handling of malformed or incomplete conversation.jsonl files
+      - Proper error reporting for inaccessible directories or permission issues
+      - Continues processing remaining sessions even if individual sessions fail
+    - **Test Coverage**: 25 comprehensive tests covering:
+      - Valid session discovery with complete data
+      - Filtering of invalid directories (missing .claudesettings.local.json)
+      - Graceful handling of missing conversation files
+      - Graceful handling of malformed conversation files
+      - Directory accessibility checks
+      - Session counting functionality
+      - Error scenarios and edge cases
+      - All 25 new tests pass successfully
+      - Full test suite: 304 tests total (279 + 25 new)
+    - **All Acceptance Criteria Met**:
+      - ✅ Finds all valid sessions by scanning ~/.claude recursively
+      - ✅ Ignores invalid directories without .claudesettings.local.json
+      - ✅ Returns array of Session objects with complete metadata
 
 - [ ] **TASK-017**: File system watcher for new sessions
   - **Dependencies**: TASK-016
@@ -1041,7 +1072,7 @@ Update this section as tasks are completed:
 **Wave 1 (Foundation)**: 3/3 tasks completed (100%)
 **Wave 2 (Storage)**: 6/6 tasks completed (100%)
 **Wave 3 (CLI)**: 5/5 tasks completed (100%)
-**Wave 4 (Discovery)**: 2/6 tasks completed (33.3%)
+**Wave 4 (Discovery)**: 3/6 tasks completed (50%)
 **Wave 5 (Patterns)**: 0/7 tasks completed
 **Wave 6 (Memory)**: 0/7 tasks completed
 **Wave 7 (TUI Foundation)**: 0/7 tasks completed
@@ -1049,14 +1080,14 @@ Update this section as tasks are completed:
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 16/55 tasks (29.1%)
+**Total Progress**: 17/55 tasks (30.9%)
 
 ---
 
 ## Next Actions
 
 **Immediate**: Continue Wave 4 (Session Discovery)
-1. Implement TASK-016: Session discovery service
+1. Implement TASK-017: File system watcher for new sessions
 
 **Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
 - All core types implemented in src/core/types.ts
@@ -1111,6 +1142,52 @@ Update this section as tasks are completed:
 ---
 
 ## Recent Completions
+
+### TASK-016: Session Discovery Service (Completed 2026-01-27)
+- **Implementation**: src/services/session-discovery.ts
+- **Tests**: tests/services/session-discovery.test.ts (25 tests passing)
+- **Key Functions Implemented**:
+  - `discoverSessions()`: Main function to discover all sessions in ~/.claude directory with recursive scanning
+  - `isClaudeDirectoryAccessible()`: Validates that ~/.claude exists and is accessible before scanning
+  - `countSessions()`: Returns count of valid sessions without full parsing for performance optimization
+- **Key Features**:
+  - Recursive directory scanning of ~/.claude for session detection
+  - Filtering based on .claudesettings.local.json presence for valid session identification
+  - Integration with conversation parser (TASK-014) and session metadata extractor (TASK-015)
+  - Graceful handling of missing or malformed conversation files without crashing
+  - Comprehensive error handling for inaccessible directories and permission issues
+  - Continues processing remaining sessions even if individual sessions fail to parse
+  - Performance-optimized session counting without full file parsing
+- **Test Coverage**: 25 comprehensive tests covering:
+  - Valid session discovery with complete metadata extraction
+  - Filtering of invalid directories (missing .claudesettings.local.json)
+  - Graceful handling of missing conversation.jsonl files
+  - Graceful handling of malformed conversation files with invalid JSON
+  - Directory accessibility checks and permission validation
+  - Session counting functionality for quick statistics
+  - Error scenarios: inaccessible directories, permission denied, missing files
+  - Edge cases: empty directories, partial data, nested structures
+  - All 25 new tests pass successfully
+  - Full test suite: 304 tests total (279 + 25 new)
+- **All Acceptance Criteria Met**:
+  - ✅ Finds all valid sessions by scanning ~/.claude recursively
+  - ✅ Ignores invalid directories without .claudesettings.local.json marker
+  - ✅ Returns array of Session objects with complete metadata
+- **Error Handling**:
+  - Graceful handling of missing .claudesettings.local.json files (skips directory)
+  - Graceful handling of malformed or incomplete conversation.jsonl files (logs and continues)
+  - Proper error reporting for inaccessible directories or permission issues
+  - Continues processing remaining sessions even if individual sessions fail
+  - Returns partial results when some sessions fail to parse
+- **Integration Points**:
+  - Uses parseConversationFile() from TASK-014 for reading conversation data
+  - Uses extractSessionMetadata() from TASK-015 for extracting session metadata
+  - Ready to integrate with ObservationStore from TASK-007 for persistence
+- **Performance Considerations**:
+  - countSessions() provides quick session count without full parsing overhead
+  - Recursive scanning handles nested directory structures efficiently
+  - Error handling allows processing to continue even with problematic sessions
+- **Next Steps**: Ready for TASK-017 (File system watcher) to enable real-time session detection
 
 ### TASK-015: Session Metadata Extractor (Completed 2026-01-27)
 - **Implementation**: src/parsers/session-metadata.ts
@@ -1411,4 +1488,4 @@ Update this section as tasks are completed:
 
 ---
 
-Last updated: 2026-01-27 (Wave 4 In Progress - TASK-015 Complete, 2/6 tasks done)
+Last updated: 2026-01-27 (Wave 4 In Progress - TASK-016 Complete, 3/6 tasks done, 50%)
