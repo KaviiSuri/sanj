@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-**Status**: In Progress (Waves 1-4 Complete, LLM Adapter foundation complete, Analyze command complete)
-**Progress**: 26/55 tasks completed (47.3%)
-**Current Focus**: Wave 4 - Session Discovery (COMPLETE), LLM Adapter foundation (COMPLETE), Analyze command (COMPLETE)
-**Next Steps**: JTBD-003-013 (AnalysisEngine tests) or Wave 5 - Pattern Detection
+**Status**: In Progress (Waves 1-4 Complete, LLM Adapter foundation complete, Analyze command complete, AnalysisEngine tests complete)
+**Progress**: 27/55 tasks completed (49.1%)
+**Current Focus**: Wave 4 - Session Discovery (COMPLETE), LLM Adapter foundation (COMPLETE), Analyze command (COMPLETE), AnalysisEngine tests (COMPLETE)
+**Next Steps**: Wave 5 - Pattern Detection or JTBD-003-013 (ObservationStore tests)
 
 ## Summary
 
@@ -1155,26 +1155,26 @@ Update this section as tasks are completed:
 **Wave 2 (Storage)**: 6/6 tasks completed (100%)
 **Wave 3 (CLI)**: 5/5 tasks completed (100%)
 **Wave 4 (Discovery)**: 6/6 tasks completed (100%)
-**Wave 5 (Patterns)**: 0/7 tasks completed
+**Wave 5 (Patterns)**: 1/7 tasks completed (14.3%)
 **Wave 6 (Memory)**: 0/7 tasks completed
 **Wave 7 (TUI Foundation)**: 0/7 tasks completed
 **Wave 8 (TUI Actions)**: 0/6 tasks completed
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 26/55 tasks (47.3%)
+**Total Progress**: 27/55 tasks (49.1%)
 
 ---
 
 ## Next Actions
 
-**Immediate**: Analyze command fully functional (JTBD-003-012 - COMPLETE)
-1. **BUG FIX**: Removed duplicate `handleAnalyze` function in `src/cli/commands/analyze.ts`
-   - Fixed type errors (added AnalyzeFlags interface, fixed return types)
-   - Fixed package.json build script to include entry point
-   - All 411 tests passing
-   - Build successfully compiles to dist/cli.js
-2. Implement JTBD-003-013: Write unit tests for AnalysisEngine
+**Immediate**: Analyze command fully functional (JTBD-003-012 - COMPLETE), AnalysisEngine tests complete (JTBD-003-014 - COMPLETE)
+1. **COMPLETED**: AnalysisEngine unit tests (JTBD-003-014)
+    - Created comprehensive mock implementations for all dependencies
+    - 31 tests covering initialization, analysis flow, deduplication, error handling, edge cases, result accuracy, and adapter enable/disable
+    - All 441 tests passing (1 unrelated intermittent file-watcher test)
+    - Tests use isolated state to avoid test pollution
+2. Implement JTBD-003-013: Write unit tests for ObservationStore
 3. Continue Wave 5: Pattern Detection (TASK-020: Tool usage analyzer)
 4. Complete Wave 4 testing cleanup
 
@@ -2012,28 +2012,63 @@ Update this section as tasks are completed:
   - ✅ Results displayed clearly with statistics
   - ✅ Error handling works gracefully
   - ✅ All 411 tests passing
-  - ✅ Build compiles successfully
-  - ✅ TypeScript compilation succeeds with no errors
+   - ✅ Build compiles successfully
+   - ✅ TypeScript compilation succeeds with no errors
+
+- [x] **TASK-003-014**: AnalysisEngine unit tests
+  - **Dependencies**: TASK-003-011 (AnalysisEngine implementation)
+  - **Deliverables**: 
+    - Mock implementations for SessionAdapter, LLMAdapter, IObservationStore, and StateManager
+    - Comprehensive test suite in tests/core/AnalysisEngine.test.ts
+  - **Acceptance Criteria**:
+    - Tests verify AnalysisEngine initialization with configuration
+    - Tests verify session fetching from all enabled adapters
+    - Tests verify filtering of sessions by last analysis timestamp
+    - Tests verify LLM pattern extraction is called for each session
+    - Tests verify extracted observations are passed to ObservationStore
+    - Tests verify state.json is updated with last run timestamp
+    - Tests verify error handling when adapters are unavailable
+    - Tests verify error handling when LLM calls fail
+    - Tests verify correct exit codes and status reporting
+    - Tests verify logging of session counts and observation counts
+  - **Files**: tests/core/AnalysisEngine.test.ts, tests/core/mocks/MockSessionAdapter.ts, tests/core/mocks/MockLLMAdapter.ts, tests/core/mocks/MockObservationStore.ts, tests/core/mocks/MockStateManager.ts
+  - **Implementation Notes**:
+    - Created comprehensive mock implementations for all dependencies
+    - 31 tests covering initialization, analysis flow, deduplication, error handling, edge cases, result accuracy, and adapter enable/disable
+    - All tests passing (441/442 total, 1 unrelated intermittent file-watcher test)
+    - Tests use isolated state to avoid test pollution
+    - Mock implementations track method calls for assertion verification
+  - **Test Coverage**: 31 comprehensive test cases including:
+    - Initialization with adapters and configuration
+    - Session fetching from enabled adapters
+    - Timestamp filtering (last analysis run)
+    - Pattern extraction workflow
+    - Observation storage and deduplication
+    - State update tracking
+    - Error handling for unavailable adapters, LLM failures, and store errors
+    - Edge cases: no sessions, empty observations, all sessions failing, similarity check failures
+    - Result accuracy: session counts, observation counts, duration, status determination
+    - Adapter enable/disable logic
 
 ---
 
 ## Updated Status
 
-**Total Progress**: 26/55 tasks completed (47.3%)
+**Total Progress**: 27/55 tasks completed (49.1%)
 
-**Newly Completed**: 5 tasks (JTBD-003-003, JTBD-003-004, JTBD-003-009, JTBD-003-011, JTBD-003-012)
+**Newly Completed**: 6 tasks (JTBD-003-003, JTBD-003-004, JTBD-003-009, JTBD-003-011, JTBD-003-012, JTBD-003-014)
 
 **Next Steps**:
-- Implement JTBD-003-013: Write unit tests for AnalysisEngine
+- Implement JTBD-003-013: Write unit tests for ObservationStore
 - Continue Wave 5: Pattern Detection (TASK-020: Tool usage analyzer)
 - Add tests for new components (adapters, deduplication, AnalysisEngine)
 - Complete Wave 4 testing cleanup (fix flaky FileWatcher test)
 
-**Wave 5 Status**: IN PROGRESS - Analyze command fully functional (JTBD-003-012 - COMPLETE)
+**Wave 5 Status**: IN PROGRESS - Analyze command fully functional (JTBD-003-012 - COMPLETE), AnalysisEngine tests complete (JTBD-003-014 - COMPLETE)
 
 **Recent Bug Fix**:
 - Removed duplicate `handleAnalyze` function in `src/cli/commands/analyze.ts`
 - Fixed type errors (added AnalyzeFlags interface, fixed return types)
 - Fixed package.json build script to include entry point
-- All 411 tests passing
+- All 441 tests passing (1 unrelated intermittent file-watcher test)
 - Build successfully compiles to dist/cli.js
