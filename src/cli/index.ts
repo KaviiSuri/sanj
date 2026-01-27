@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { Cli } from "clerc";
 import pkg from "../../package.json" assert { type: "json" };
+import { initHandler } from "./commands/init.js";
 
 /**
  * Main CLI entry point for Sanj
@@ -20,10 +21,7 @@ Cli()
 
   // Command: init - Initialize Sanj with default settings
   .command("init", "Initialize sanj with default settings")
-  .on("init", (ctx) => {
-    console.log("sanj init - Not yet implemented");
-    console.log("This command will set up Sanj configuration and directories.");
-  })
+  .on("init", initHandler)
 
   // Command: analyze - Analyze recent coding sessions
   .command("analyze", "Analyze recent coding sessions")

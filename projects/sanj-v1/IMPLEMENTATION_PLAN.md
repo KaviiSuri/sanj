@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Waves 1-2 Complete)
-**Progress**: 10/55 tasks completed (18%)
+**Progress**: 11/55 tasks completed (20%)
 **Current Focus**: Wave 3 - CLI Commands Structure
-**Next Steps**: TASK-010 (sanj init command)
+**Next Steps**: TASK-011 (sanj config command)
 
 ## Summary
 
@@ -234,7 +234,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - TASK 001-003: Add help and version plugins
     - TASK 001-004: Add not-found error handling
 
-- [ ] **TASK-010**: sanj init command
+- [x] **TASK-010**: sanj init command
   - **Dependencies**: TASK-008, TASK-009
   - **Deliverables**:
     - Create InitCommand class
@@ -245,7 +245,23 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - `sanj init` runs successfully
     - Creates config and directories
     - Shows helpful output
-  - **Files**: src/commands/init.ts
+  - **Files**: src/cli/commands/init.ts, src/cli/index.ts
+  - **Implementation Notes**:
+    - **Files Created**: src/cli/commands/init.ts with initHandler function
+    - **Integration Point**: src/cli/index.ts imports and uses initHandler for the init command
+    - **Key Features**:
+      - Creates ~/.sanj directory structure (config dir, memories/, observations/, sessions/, logs/)
+      - Initializes config.json with default configuration values
+      - Initializes state.json with default analysis state
+      - Idempotent behavior: running init twice works correctly without errors
+      - Exit codes: 0 for success, 1 for failure scenarios
+      - User-friendly success message with next steps guidance
+    - **Test Results**:
+      - End-to-end testing confirmed: Directory creation, file initialization verified
+      - Idempotency verified: Second run completes successfully without duplication
+      - All 187 existing tests still pass (no regressions)
+    - **Error Handling**: Graceful error handling with SanjError pattern, proper exit codes
+    - **Dependencies Used**: Successfully integrates initializeProject() from TASK-008
 
 - [ ] **TASK-011**: sanj config command
   - **Dependencies**: TASK-005, TASK-009
@@ -940,7 +956,7 @@ Update this section as tasks are completed:
 
 **Wave 1 (Foundation)**: 3/3 tasks completed (100%)
 **Wave 2 (Storage)**: 6/6 tasks completed (100%)
-**Wave 3 (CLI)**: 1/5 tasks completed (20%)
+**Wave 3 (CLI)**: 2/5 tasks completed (40%)
 **Wave 4 (Discovery)**: 0/6 tasks completed
 **Wave 5 (Patterns)**: 0/7 tasks completed
 **Wave 6 (Memory)**: 0/7 tasks completed
@@ -949,14 +965,14 @@ Update this section as tasks are completed:
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 10/55 tasks (18%)
+**Total Progress**: 11/55 tasks (20%)
 
 ---
 
 ## Next Actions
 
 **Immediate**: Continue Wave 3 (CLI Commands Structure)
-1. Implement TASK-010: sanj init command
+1. Implement TASK-011: sanj config command
 
 **Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
 - All core types implemented in src/core/types.ts
@@ -971,8 +987,9 @@ Update this section as tasks are completed:
 - TASK-007 (File-based storage): Complete - ObservationStore and MemoryStore with 162 passing tests
 - TASK-008 (First-time initialization): Complete - Initialization logic with 25 passing tests
 
-**Wave 3 Status**: IN PROGRESS (1/5 tasks, 20%)
+**Wave 3 Status**: IN PROGRESS (2/5 tasks, 40%)
 - TASK-009 (CLERC integration): Complete - CLI entry point with command placeholders and help/version support
+- TASK-010 (sanj init command): Complete - CLI init command with end-to-end testing and idempotency verification
 
 **Milestone 1**: Waves 1-3 complete (Basic CLI functional)
 **Milestone 2**: Waves 4-6 complete (Core analysis working)
@@ -1007,6 +1024,29 @@ Update this section as tasks are completed:
 ---
 
 ## Recent Completions
+
+### TASK-010: sanj init Command (Completed 2026-01-27)
+- **Implementation**: src/cli/commands/init.ts, src/cli/index.ts
+- **Key Features**:
+  - initHandler function implementing the sanj init command
+  - Wired up to initializeProject() from TASK-008
+  - Creates complete ~/.sanj directory structure:
+    - Config directory (~/.sanj)
+    - Memories directory (~/.sanj/memories/)
+    - Observations directory (~/.sanj/memories/observations/)
+    - Sessions directory (~/.sanj/memories/sessions/)
+    - Logs directory (~/.sanj/logs/)
+  - Initializes config.json with default configuration values
+  - Initializes state.json with default analysis state
+  - User-friendly success message with next steps guidance
+  - Proper exit codes: 0 for success, 1 for failure
+- **Testing Results**:
+  - End-to-end testing confirmed: All directories and files created correctly
+  - Idempotency verified: Running init twice works without errors or duplication
+  - All 187 existing tests still pass (no regressions)
+- **Error Handling**: Graceful error handling with SanjError pattern, proper error messages
+- **Integration**: Successfully integrated with CLERC CLI framework from TASK-009
+- **Next Steps**: Ready for TASK-011 (sanj config command) and other CLI commands
 
 ### TASK-009: CLERC Integration and Command Registry (Completed 2026-01-27)
 - **Implementation**: src/cli/index.ts
@@ -1108,4 +1148,4 @@ Update this section as tasks are completed:
 
 ---
 
-Last updated: 2026-01-27 (Wave 3 In Progress - TASK-009 CLERC Integration Complete)
+Last updated: 2026-01-27 (Wave 3 In Progress - TASK-010 sanj init Command Complete)
