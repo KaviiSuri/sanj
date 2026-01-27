@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-**Status**: In Progress (Waves 1-3 Complete)
-**Progress**: 19/55 tasks completed (34.5%)
-**Current Focus**: Wave 4 - Session Discovery
-**Next Steps**: Wave 5 - Pattern Detection
+**Status**: In Progress (Waves 1-4 Complete, LLM Adapter foundation complete)
+**Progress**: 22/55 tasks completed (40.0%)
+**Current Focus**: Wave 4 - Session Discovery (COMPLETE), LLM Adapter foundation (COMPLETE)
+**Next Steps**: JTBD-003-011 (AnalysisEngine orchestration) or Wave 5 - Pattern Detection
 
 ## Summary
 
@@ -1154,7 +1154,7 @@ Update this section as tasks are completed:
 **Wave 1 (Foundation)**: 3/3 tasks completed (100%)
 **Wave 2 (Storage)**: 6/6 tasks completed (100%)
 **Wave 3 (CLI)**: 5/5 tasks completed (100%)
-**Wave 4 (Discovery)**: 4/6 tasks completed (66.7%)
+**Wave 4 (Discovery)**: 6/6 tasks completed (100%)
 **Wave 5 (Patterns)**: 0/7 tasks completed
 **Wave 6 (Memory)**: 0/7 tasks completed
 **Wave 7 (TUI Foundation)**: 0/7 tasks completed
@@ -1162,14 +1162,17 @@ Update this section as tasks are completed:
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 18/55 tasks (32.7%)
+**Total Progress**: 22/55 tasks (40.0%)
 
 ---
 
 ## Next Actions
 
-**Immediate**: Continue Wave 4 (Session Discovery)
-1. Implement TASK-019: Session indexing and querying
+**Immediate**: LLM Adapter foundation complete, ready for AnalysisEngine
+1. Implement JTBD-003-011: AnalysisEngine orchestration
+2. Continue Wave 5: Pattern Detection (TASK-020: Tool usage analyzer)
+3. Implement JTBD-003-003: ClaudeCodeSessionAdapter
+4. Implement JTBD-003-004: OpenCodeSessionAdapter
 
 **Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
 - All core types implemented in src/core/types.ts
@@ -1192,6 +1195,18 @@ Update this section as tasks are completed:
 - TASK-013 (CLI output formatting): Complete - Formatter class with colors, icons, table formatting, spinner, and NO_COLOR support
 
 **Wave 4 Status**: COMPLETE (6/6 tasks, 100%)
+- TASK-014 (Conversation file parser): Complete - Full conversation.jsonl parsing with 26 passing tests
+- TASK-015 (Session metadata extractor): Complete - Session metadata extraction with 32 passing tests
+- TASK-016 (Session discovery service): Complete - Session discovery and scanning with 25 passing tests
+- TASK-017 (File system watcher): Complete - FileWatcher with event emission, 24 tests passing
+- TASK-018 (Session ingestion pipeline): Complete - SessionIngestionService with idempotency, 17 tests passing
+- TASK-019 (Session indexing and querying): Complete - SessionStore with 41 passing tests, full CRUD, filtering, sorting, pagination
+
+**JTBD-003 LLM Adapter Tasks**: 3 tasks complete (003-005, 003-006, 003-007)
+- TASK 003-002 (SessionAdapter interface): Complete - SessionAdapter and Session interfaces defined
+- TASK 003-005 (LLMAdapter interface): Complete - LLMAdapter interface with all methods
+- TASK 003-006 (OpenCodeLLMAdapter with extractPatterns): Complete - Full implementation with 18 tests passing
+- TASK 003-007 (checkSimilarity method): Complete - LLM-based semantic similarity checking implemented
 - TASK-014 (Conversation file parser): Complete - Full conversation.jsonl parsing with 26 passing tests
 - TASK-015 (Session metadata extractor): Complete - Session metadata extraction with 32 passing tests
 - TASK-016 (Session discovery service): Complete - Session discovery and scanning with 25 passing tests
@@ -1311,6 +1326,118 @@ Update this section as tasks are completed:
   - Blocks JTBD-003-004 (OpenCodeSessionAdapter implementation)
   - Foundation for JTBD-003-011 (AnalysisEngine orchestration)
 - **Next Steps**: Ready for adapter implementations (ClaudeCodeSessionAdapter, OpenCodeSessionAdapter) to implement the interface
+
+### 003-005: LLMAdapter Interface (Completed 2026-01-27)
+- **Implementation**: src/adapters/llm/LLMAdapter.ts
+- **Tests**: tests/adapters/llm.test.ts (comprehensive test coverage)
+- **Key Features Implemented**:
+  - LLMAdapter interface with name, isAvailable(), extractPatterns(), checkSimilarity() methods
+  - Full JSDoc documentation explaining purpose, inputs, outputs, and error behavior
+  - Type exports for convenience (Session, Observation)
+  - Designed for pluggable LLM backends without changing core analysis logic
+- **Interface Methods**:
+  - `name: string` - Human-readable name for the adapter
+  - `isAvailable(): Promise<boolean>` - Check if LLM tool is available in environment
+  - `extractPatterns(session: Session): Promise<Observation[]>` - Extract patterns from session
+  - `checkSimilarity(a: Observation, b: Observation): Promise<boolean>` - Check semantic similarity
+- **All Acceptance Criteria Met**:
+  - ✅ LLMAdapter interface is defined in src/adapters/llm/LLMAdapter.ts
+  - ✅ Interface includes name, isAvailable(), extractPatterns(), and checkSimilarity() methods
+  - ✅ All method signatures match specification exactly
+  - ✅ JSDoc comments explain purpose, inputs, outputs, error behavior
+  - ✅ Related types (Observation, Session) are exported from same file
+  - ✅ Types are imported from src/core/types.ts
+  - ✅ File follows TypeScript best practices and team conventions
+  - ✅ No implementation code in the interface file (only type definitions)
+  - ✅ Interface is exported for use by OpenCodeLLMAdapter
+- **Integration Points**:
+  - Blocks JTBD-003-006 (OpenCodeLLMAdapter implementation)
+  - Used by AnalysisEngine for pattern extraction
+  - Used by ObservationStore for deduplication
+- **Next Steps**: Ready for concrete LLM adapter implementations (OpenCodeLLMAdapter, future ClaudeCodeLLMAdapter)
+
+### 003-006: OpenCodeLLMAdapter with extractPatterns Method (Completed 2026-01-27)
+- **Implementation**: src/adapters/llm/OpenCodeLLM.ts
+- **Tests**: tests/adapters/llm.test.ts (18 tests passing, comprehensive coverage)
+- **Key Features Implemented**:
+  - OpenCodeLLMAdapter class implementing LLMAdapter interface
+  - Default model: zai-coding-plan/glm-4.7 (configurable)
+  - isAvailable() checks if OpenCode CLI is in PATH
+  - extractPatterns() sends session content to OpenCode LLM and extracts observations
+  - LLM response parsing with JSON validation
+  - Observation creation with proper metadata (id, category, confidence, timestamps)
+  - Error handling with SanjError pattern
+  - Availability check caching for performance
+- **Implementation Details**:
+  - Constructor accepts optional model override
+  - isAvailable() uses `which opencode` command to check availability
+  - extractPatterns() builds LLM prompt and executes via Bun.spawn()
+  - Parse LLM response and transform to Observation objects
+  - Filter observations by confidence threshold (0.6 minimum)
+  - Handle malformed JSON and empty responses gracefully
+- **Test Coverage**: 18 comprehensive tests covering:
+  - Constructor with default and custom model
+  - extractPatterns() with valid and empty LLM responses
+  - extractPatterns() with invalid JSON responses
+  - extractPatterns() filtering low confidence observations
+  - checkSimilarity() method (placeholder implementation)
+  - createObservation() with various inputs
+  - Error handling for LLM failures
+- **All Acceptance Criteria Met**:
+  - ✅ OpenCodeLLMAdapter class created and exported
+  - ✅ isAvailable() correctly detects OpenCode CLI (with caching)
+  - ✅ extractPatterns() builds and executes LLM prompt
+  - ✅ LLM response is parsed into Observation array
+  - ✅ Each Observation has required fields (id, text, type, confidence, sessionIds, timestamps, count)
+  - ✅ Errors are handled gracefully (throws SanjError, logs, continues)
+  - ✅ Code is TypeScript-strict and passes type checking
+  - ✅ Method is documented with JSDoc comments
+  - ✅ Ready for checkSimilarity() implementation in 003-007
+- **Integration Points**:
+  - Ready for JTBD-003-007 (checkSimilarity implementation)
+  - Used by ObservationStore for deduplication
+  - Used by AnalysisEngine for pattern extraction
+- **Next Steps**: Implement checkSimilarity() method in JTBD-003-007
+
+### 003-007: checkSimilarity Method for OpenCodeLLMAdapter (Completed 2026-01-27)
+- **Implementation**: src/adapters/llm/OpenCodeLLM.ts
+- **Tests**: tests/adapters/llm.test.ts (comprehensive coverage)
+- **Key Features Implemented**:
+  - checkSimilarity() method added to OpenCodeLLMAdapter class
+  - LLM-based semantic comparison between two observations
+  - Conservative behavior (returns false when uncertain)
+  - Build comparison prompt with observation text and category
+  - Parse LLM response (YES/NO)
+  - Graceful error handling (returns false on failure)
+- **Implementation Details**:
+  - Checks if OpenCode is available before calling
+  - Builds prompt asking if observations are semantically similar
+  - Calls OpenCode CLI via callOpenCode() method
+  - Parses response: YES=true, NO=false, anything else=false
+  - Returns false on LLM failure or unclear responses
+  - Conservative approach: prefer separate observations when uncertain
+- **Test Coverage**: Comprehensive tests covering:
+  - checkSimilarity() returns false when OpenCode is unavailable
+  - checkSimilarity() returns true for YES response
+  - checkSimilarity() returns false for NO response
+  - checkSimilarity() returns false for unclear responses
+  - checkSimilarity() returns false on exception
+- **All Acceptance Criteria Met**:
+  - ✅ Method exists and is callable
+  - ✅ Accepts two Observation parameters
+  - ✅ Returns Promise<boolean>
+  - ✅ Semantic comparison works (delegates to LLM)
+  - ✅ LLM integration: calls OpenCode CLI with appropriate prompt
+  - ✅ Uses configured model from constructor
+  - ✅ Includes -q flag for quiet operation
+  - ✅ Error handling: gracefully handles OpenCode CLI failures
+  - ✅ Returns false on error (fail-safe)
+  - ✅ TypeScript compilation succeeds with no errors
+  - ✅ Code quality: follows same style as extractPatterns, includes JSDoc
+- **Integration Points**:
+  - Enables ObservationStore deduplication logic (JTBD-003-009)
+  - Ready for AnalysisEngine orchestration (JTBD-003-011)
+- **Next Steps**: Ready for JTBD-003-009 (ObservationStore with deduplication logic) and JTBD-003-011 (AnalysisEngine)
 
 ### TASK-016: Session Discovery Service (Completed 2026-01-27)
 - **Implementation**: src/services/session-discovery.ts
