@@ -7,7 +7,7 @@
  * Format: Each line is a JSON object representing a conversation event.
  */
 
-import type { Message } from '../core/types';
+import type { Message, ToolUse } from '../core/types';
 
 /**
  * Raw event from conversation.jsonl file
@@ -23,6 +23,14 @@ interface ConversationEvent {
   sessionId?: string;
   cwd?: string;
   [key: string]: unknown;
+}
+
+/**
+ * Result of content extraction (text and tool uses)
+ */
+interface ExtractedContent {
+  text: string;
+  toolUses: ToolUse[];
 }
 
 /**
@@ -81,11 +89,12 @@ export function parseConversation(content: string): ParsedConversation {
 
       // Extract message if present
       if (event.message && event.message.role && event.message.content) {
-        const content = extractContent(event.message.content);
-        if (content) {
+        const extracted = extractContent(event.message.content);
+        if (extracted.text || extracted.toolUses.length > 0) {
           messages.push({
             role: event.message.role,
-            content,
+            content: extracted.text,
+            toolUses: extracted.toolUses.length > 0 ? extracted.toolUses : undefined,
             timestamp,
           });
         }
@@ -110,9 +119,9 @@ export function parseConversation(content: string): ParsedConversation {
  * Extract content string from message content field.
  * Handles both string format and array format (with text/tool_use blocks).
  */
-function extractContent(content: string | Array<{ type: string; text?: string; [key: string]: unknown }>): string {
+function extractContent(content: string | Array<{ type: string; text?: string; [key: string]: unknown }>): ExtractedContent {
   if (typeof content === 'string') {
-    return content;
+    return { text: content, toolUses: [] };
   }
 
   if (Array.isArray(content)) {
@@ -121,10 +130,24 @@ function extractContent(content: string | Array<{ type: string; text?: string; [
       .filter(block => block.type === 'text' && typeof block.text === 'string')
       .map(block => block.text as string);
 
-    return textBlocks.join('\n\n');
+    // Extract all tool_use blocks
+    const toolUses: ToolUse[] = content
+      .filter(block => block.type === 'tool_use')
+      .map(block => ({
+        id: crypto.randomUUID(),
+        name: String((block as { name?: string }).name || 'unknown'),
+        input: (block as { input?: Record<string, unknown> }).input,
+        result: undefined,
+        success: undefined,
+      }));
+
+    return {
+      text: textBlocks.join('\n\n'),
+      toolUses,
+    };
   }
 
-  return '';
+  return { text: '', toolUses: [] };
 }
 
 /**

@@ -37,6 +37,26 @@ export interface Session {
 }
 
 /**
+ * Represents a tool use in an assistant message.
+ */
+export interface ToolUse {
+  /** Unique identifier for this tool call */
+  id: string;
+
+  /** Name of the tool (e.g., 'read', 'edit', 'bash') */
+  name: string;
+
+  /** Tool input parameters */
+  input?: Record<string, unknown>;
+
+  /** Tool result/output (if available) */
+  result?: string;
+
+  /** Whether the tool call succeeded */
+  success?: boolean;
+}
+
+/**
  * Represents a single turn in a conversation.
  */
 export interface Message {
@@ -45,6 +65,9 @@ export interface Message {
 
   /** Message text */
   content: string;
+
+  /** Tool uses in this message (assistant messages only) */
+  toolUses?: ToolUse[];
 
   /** When message was sent (optional, some tools may not provide) */
   timestamp?: Date;
@@ -87,6 +110,47 @@ export interface Observation {
 
   /** Arbitrary extensibility */
   metadata?: Record<string, unknown>;
+}
+
+/**
+ * Metadata for tool usage observations.
+ */
+export interface ToolUsageMetadata {
+  /** Name of the tool (e.g., 'read', 'edit', 'bash') */
+  toolName: string;
+
+  /** How many times this tool was used */
+  frequency: number;
+
+  /** Common parameters used with this tool */
+  commonParameters?: Record<string, unknown>;
+
+  /** Typical sequence this tool appears in */
+  typicalSequence?: string[];
+
+  /** Index signature for extensibility */
+  [key: string]: unknown;
+}
+
+// =============================================================================
+// Analyzer Types
+// =============================================================================
+
+/**
+ * Interface for pattern analyzers.
+ */
+export interface PatternAnalyzer {
+  /** Unique name for this analyzer */
+  name: string;
+
+  /**
+   * Analyze a session and extract observations.
+   *
+   * @param session - The session to analyze
+   * @param messages - Parsed messages from the session
+   * @returns Array of observations extracted from the session
+   */
+  analyze(session: Session, messages: Message[]): Promise<Observation[]>;
 }
 
 // =============================================================================

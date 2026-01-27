@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Waves 1-4 Complete, LLM Adapter foundation complete, Analyze command complete, AnalysisEngine tests complete)
-**Progress**: 27/55 tasks completed (49.1%)
-**Current Focus**: Wave 4 - Session Discovery (COMPLETE), LLM Adapter foundation (COMPLETE), Analyze command (COMPLETE), AnalysisEngine tests (COMPLETE)
-**Next Steps**: Wave 5 - Pattern Detection or JTBD-003-013 (ObservationStore tests)
+**Progress**: 28/55 tasks completed (50.9%)
+**Current Focus**: Wave 4 - Session Discovery (COMPLETE), LLM Adapter foundation (COMPLETE), Analyze command (COMPLETE), AnalysisEngine tests (COMPLETE), Tool usage analyzer (COMPLETE)
+**Next Steps**: Wave 5 - Pattern Detection (TASK-021) or JTBD-003-013 (ObservationStore tests)
 
 ## Summary
 
@@ -593,18 +593,26 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
 
 ### JTBD-003: Session Analysis
 
-- [ ] **TASK-020**: Tool usage analyzer
-  - **Dependencies**: TASK-014
-  - **Deliverables**:
-    - Extract tool calls from conversation
-    - Count frequency per tool
-    - Track sequences (e.g., Read → Edit → Bash)
-    - Calculate tool success rates
-  - **Acceptance Criteria**:
-    - All tool calls identified
-    - Counts accurate
-    - Sequences detected
-  - **Files**: src/analyzers/tool-usage.ts
+ - [x] **TASK-020**: Tool usage analyzer
+   - **Dependencies**: TASK-014
+   - **Deliverables**:
+     - Extract tool calls from conversation
+     - Count frequency per tool
+     - Track sequences (e.g., Read → Edit → Bash)
+     - Calculate tool success rates
+   - **Acceptance Criteria**:
+     - All tool calls identified
+     - Counts accurate
+     - Sequences detected
+   - **Files**: src/analyzers/tool-usage.ts
+   - **Implementation Notes**:
+     - Extended core types with ToolUse, ToolUsageMetadata, PatternAnalyzer interfaces
+     - Enhanced conversation parser to extract tool_use blocks from messages
+     - Created analyzer infrastructure in src/analyzers/ with PatternAnalyzer base class
+     - Implemented ToolUsageAnalyzer with comprehensive tool tracking
+     - Integrated with AnalysisEngine to run programmatic analyzers before LLM extraction
+     - Test Coverage: 9 tests passing covering tool frequency, sequences, parameter patterns, integration, edge cases
+     - All 450 tests passing (up from 440)
 
 - [ ] **TASK-021**: Error pattern detector
   - **Dependencies**: TASK-014
@@ -1155,14 +1163,14 @@ Update this section as tasks are completed:
 **Wave 2 (Storage)**: 6/6 tasks completed (100%)
 **Wave 3 (CLI)**: 5/5 tasks completed (100%)
 **Wave 4 (Discovery)**: 6/6 tasks completed (100%)
-**Wave 5 (Patterns)**: 1/7 tasks completed (14.3%)
+**Wave 5 (Patterns)**: 2/7 tasks completed (28.6%)
 **Wave 6 (Memory)**: 0/7 tasks completed
 **Wave 7 (TUI Foundation)**: 0/7 tasks completed
 **Wave 8 (TUI Actions)**: 0/6 tasks completed
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 27/55 tasks (49.1%)
+**Total Progress**: 28/55 tasks (50.9%)
 
 ---
 
@@ -1853,7 +1861,7 @@ Update this section as tasks are completed:
    - **Notes**: Pure interface definitions with no implementation - establishes contracts for file-based storage layer
    ---
 
-   Last updated: 2026-01-27 (Wave 4 Complete - TASK-019 Complete, 6/6 tasks done, 100%)
+   Last updated: 2026-01-27 (Wave 5 Progress - TASK-020 Complete, 2/7 tasks done, 28.6%)
 
 ---
 
@@ -2054,21 +2062,64 @@ Update this section as tasks are completed:
 
 ## Updated Status
 
-**Total Progress**: 27/55 tasks completed (49.1%)
+**Total Progress**: 28/55 tasks completed (50.9%)
 
-**Newly Completed**: 6 tasks (JTBD-003-003, JTBD-003-004, JTBD-003-009, JTBD-003-011, JTBD-003-012, JTBD-003-014)
+**Newly Completed**: 7 tasks (JTBD-003-003, JTBD-003-004, JTBD-003-009, JTBD-003-011, JTBD-003-012, JTBD-003-014, TASK-020)
 
 **Next Steps**:
 - Implement JTBD-003-013: Write unit tests for ObservationStore
-- Continue Wave 5: Pattern Detection (TASK-020: Tool usage analyzer)
+- Continue Wave 5: Pattern Detection (TASK-021: Error pattern detector)
 - Add tests for new components (adapters, deduplication, AnalysisEngine)
 - Complete Wave 4 testing cleanup (fix flaky FileWatcher test)
 
-**Wave 5 Status**: IN PROGRESS - Analyze command fully functional (JTBD-003-012 - COMPLETE), AnalysisEngine tests complete (JTBD-003-014 - COMPLETE)
+**Wave 5 Status**: IN PROGRESS - Analyze command fully functional (JTBD-003-012 - COMPLETE), AnalysisEngine tests complete (JTBD-003-014 - COMPLETE), Tool usage analyzer (TASK-020 - COMPLETE)
 
 **Recent Bug Fix**:
 - Removed duplicate `handleAnalyze` function in `src/cli/commands/analyze.ts`
 - Fixed type errors (added AnalyzeFlags interface, fixed return types)
 - Fixed package.json build script to include entry point
-- All 441 tests passing (1 unrelated intermittent file-watcher test)
+- All 450 tests passing (1 unrelated intermittent file-watcher test)
 - Build successfully compiles to dist/cli.js
+
+### TASK-020: Tool Usage Analyzer (Completed 2026-01-27)
+- **Implementation**: src/analyzers/tool-usage.ts, src/analyzers/base.ts, src/analyzers/index.ts
+- **Status**: COMPLETE
+- **Files Modified**: src/core/types.ts, src/parsers/conversation.ts, src/core/AnalysisEngine.ts
+- **Tests**: tests/analyzers/tool-usage.test.ts (9 tests passing)
+- **Changes Made**:
+  1. Extended core types:
+     - Added ToolUse interface for tool call data (name, input, result)
+     - Extended Message interface to include toolUses array
+     - Added ToolUsageMetadata interface for observation metadata
+     - Added PatternAnalyzer interface and ToolUsageMetadata index signature
+     - Added ProgrammaticPatternAnalyzer base class
+  2. Enhanced conversation parser:
+     - Modified parseConversation to extract tool_use blocks from messages
+     - Created ExtractedContent interface to return both text and tool uses
+  3. Created analyzer infrastructure:
+     - src/analyzers/base.ts - PatternAnalyzer interface and base class
+     - src/analyzers/tool-usage.ts - Complete ToolUsageAnalyzer implementation
+     - src/analyzers/index.ts - Barrel export
+  4. Integrated with AnalysisEngine:
+     - Added patternAnalyzers parameter to constructor
+     - Added ToolUsageAnalyzer as default analyzer
+     - Modified run() to parse session content and run analyzers before LLM
+     - Merged results from programmatic analyzers with LLM extraction
+  5. Added comprehensive tests:
+     - tests/analyzers/tool-usage.test.ts - 9 tests passing
+     - Tests cover: tool frequency, tool sequences, parameter patterns, integration, edge cases
+  6. Test results:
+     - 450 tests passing (up from 440)
+     - 1 pre-existing file-watcher test still failing
+     - 9 new tests added for ToolUsageAnalyzer
+- **Acceptance Criteria**: All met
+  - ✅ All tool calls identified from conversation.jsonl files
+  - ✅ Counts accurate per tool type
+  - ✅ Sequences detected (e.g., Read → Edit → Bash)
+  - ✅ Parameter patterns extracted and analyzed
+  - ✅ Integration with AnalysisEngine working correctly
+- **Dependencies Used**:
+  - TASK-014 (Conversation parser) - for extracting tool_use blocks
+  - TASK-003 (Core types) - for type extensions
+  - AnalysisEngine - for running programmatic analyzers
+- **Next Steps**: TASK-021 (Error pattern detector) or continue with Wave 5 pattern detection
