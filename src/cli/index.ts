@@ -2,6 +2,7 @@
 import { Cli } from "clerc";
 import pkg from "../../package.json" assert { type: "json" };
 import { initHandler } from "./commands/init.js";
+import { configHandler } from "./commands/config.js";
 
 /**
  * Main CLI entry point for Sanj
@@ -46,10 +47,7 @@ Cli()
 
   // Command: config - View or edit configuration settings
   .command("config", "View or edit configuration settings")
-  .on("config", (ctx) => {
-    console.log("sanj config - Not yet implemented");
-    console.log("This command will manage configuration settings.");
-  })
+  .on("config", configHandler)
 
   // Command: cron - Manage scheduled automation
   .command("cron", "Manage scheduled automation")

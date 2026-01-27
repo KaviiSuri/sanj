@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Waves 1-2 Complete)
-**Progress**: 11/55 tasks completed (20%)
+**Progress**: 12/55 tasks completed (21.8%)
 **Current Focus**: Wave 3 - CLI Commands Structure
-**Next Steps**: TASK-011 (sanj config command)
+**Next Steps**: TASK-012 (Global CLI setup)
 
 ## Summary
 
@@ -263,7 +263,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - **Error Handling**: Graceful error handling with SanjError pattern, proper exit codes
     - **Dependencies Used**: Successfully integrates initializeProject() from TASK-008
 
-- [ ] **TASK-011**: sanj config command
+- [x] **TASK-011**: sanj config command
   - **Dependencies**: TASK-005, TASK-009
   - **Deliverables**:
     - Create ConfigCommand with subcommands
@@ -275,7 +275,24 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - All subcommands work
     - Invalid keys rejected
     - Config persists after set
-  - **Files**: src/commands/config.ts
+  - **Files**: src/cli/commands/config.ts
+  - **Implementation Notes**:
+    - Created src/cli/commands/config.ts with three subcommands: list, get, set
+    - **list subcommand**: Displays all configuration values in a formatted, hierarchical view
+    - **get subcommand**: Retrieves specific config values using dot notation (e.g., llmAdapter.type)
+    - **set subcommand**: Updates config values with full validation and type coercion
+    - Full validation for all config values with helpful error messages:
+      - LLM adapter type validation (opencode/ollama)
+      - Session adapter validation (claudeCode/mcp)
+      - Memory target validation (shortTerm/longTerm)
+      - Numeric validation for thresholds and time windows
+      - Boolean validation for adapter enable flags
+    - Cross-field validation to prevent invalid states (e.g., all adapters disabled)
+    - Supports dot notation for nested keys (e.g., llmAdapter.type, thresholds.similarityThreshold)
+    - Type coercion for boolean values (true/false, yes/no, 1/0) and numeric values
+    - Manual testing completed successfully for all subcommands
+    - All 187 existing tests still pass (no regressions)
+    - Note: Unit tests were not added as they would require refactoring for dependency injection
 
 - [ ] **TASK-012**: Global CLI setup (bin entry point)
   - **Dependencies**: TASK-009
@@ -956,7 +973,7 @@ Update this section as tasks are completed:
 
 **Wave 1 (Foundation)**: 3/3 tasks completed (100%)
 **Wave 2 (Storage)**: 6/6 tasks completed (100%)
-**Wave 3 (CLI)**: 2/5 tasks completed (40%)
+**Wave 3 (CLI)**: 3/5 tasks completed (60%)
 **Wave 4 (Discovery)**: 0/6 tasks completed
 **Wave 5 (Patterns)**: 0/7 tasks completed
 **Wave 6 (Memory)**: 0/7 tasks completed
@@ -965,14 +982,14 @@ Update this section as tasks are completed:
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 11/55 tasks (20%)
+**Total Progress**: 12/55 tasks (21.8%)
 
 ---
 
 ## Next Actions
 
 **Immediate**: Continue Wave 3 (CLI Commands Structure)
-1. Implement TASK-011: sanj config command
+1. Implement TASK-012: Global CLI setup (bin entry point)
 
 **Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
 - All core types implemented in src/core/types.ts
@@ -987,9 +1004,10 @@ Update this section as tasks are completed:
 - TASK-007 (File-based storage): Complete - ObservationStore and MemoryStore with 162 passing tests
 - TASK-008 (First-time initialization): Complete - Initialization logic with 25 passing tests
 
-**Wave 3 Status**: IN PROGRESS (2/5 tasks, 40%)
+**Wave 3 Status**: IN PROGRESS (3/5 tasks, 60%)
 - TASK-009 (CLERC integration): Complete - CLI entry point with command placeholders and help/version support
 - TASK-010 (sanj init command): Complete - CLI init command with end-to-end testing and idempotency verification
+- TASK-011 (sanj config command): Complete - Config command with list/get/set subcommands, full validation, and dot notation support
 
 **Milestone 1**: Waves 1-3 complete (Basic CLI functional)
 **Milestone 2**: Waves 4-6 complete (Core analysis working)
@@ -1024,6 +1042,39 @@ Update this section as tasks are completed:
 ---
 
 ## Recent Completions
+
+### TASK-011: sanj config Command (Completed 2026-01-27)
+- **Implementation**: src/cli/commands/config.ts
+- **Key Features**:
+  - Three subcommands implemented: list, get, set
+  - **list subcommand**: Displays all configuration values in a formatted, hierarchical view with clear section headers
+  - **get subcommand**: Retrieves specific config values using dot notation (e.g., `sanj config get llmAdapter.type`)
+  - **set subcommand**: Updates config values with comprehensive validation and automatic type coercion
+  - Full validation for all config values with helpful, actionable error messages:
+    - LLM adapter type validation (must be opencode or ollama)
+    - Session adapter validation (claudeCode and mcp with enable/disable flags)
+    - Memory target validation (shortTerm and longTerm with enable/disable flags)
+    - Numeric validation for thresholds (0-1 range) and time windows (positive integers)
+    - Boolean validation with flexible input (true/false, yes/no, 1/0, on/off)
+  - Cross-field validation to prevent invalid states:
+    - Prevents disabling all session adapters simultaneously
+    - Prevents disabling all memory targets simultaneously
+    - Ensures at least one adapter/target remains enabled
+  - Supports dot notation for nested keys throughout the config structure
+  - Type coercion automatically converts string inputs to appropriate types (boolean, number)
+  - Atomic config updates with proper error handling and rollback on validation failure
+- **Testing Results**:
+  - Manual testing completed successfully for all three subcommands
+  - Tested list command: displays full config correctly with proper formatting
+  - Tested get command: retrieves nested values using dot notation
+  - Tested set command: validates and saves config changes with type coercion
+  - Tested error cases: invalid keys, invalid values, cross-field validation
+  - All 187 existing tests still pass (no regressions)
+- **Notes**:
+  - Unit tests were not added as they would require refactoring for dependency injection
+  - Current implementation uses direct file system operations which are difficult to mock
+  - Future refactoring could introduce dependency injection for better testability
+- **Next Steps**: Ready for TASK-012 (Global CLI setup with bin entry point)
 
 ### TASK-010: sanj init Command (Completed 2026-01-27)
 - **Implementation**: src/cli/commands/init.ts, src/cli/index.ts
@@ -1148,4 +1199,4 @@ Update this section as tasks are completed:
 
 ---
 
-Last updated: 2026-01-27 (Wave 3 In Progress - TASK-010 sanj init Command Complete)
+Last updated: 2026-01-27 (Wave 3 In Progress - TASK-011 sanj config Command Complete)
