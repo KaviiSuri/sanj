@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+bun.lock
+
+# Build output
+dist/
+*.js
+*.js.map
+*.d.ts
+!src/**/*.ts
+!tests/**/*.ts
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+
+# Logs
+*.log
+logs/
+
+# Claude Code
+.claude/settings.local.json
+
+# Project-specific
+.ralphctl/

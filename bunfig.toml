@@ -1,0 +1,13 @@
+# Bun configuration for Sanj
+# Documentation: https://bun.sh/docs/runtime/bunfig
+
+[test]
+# Test configuration
+root = "./tests"
+timeout = 5000
+preload = []
+
+[install]
+# Install configuration
+# Use exact versions for reproducible builds
+exact = false
