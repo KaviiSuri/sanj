@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Waves 1-3 Complete)
-**Progress**: 15/55 tasks completed (27.3%)
+**Progress**: 16/55 tasks completed (29.1%)
 **Current Focus**: Wave 4 - Session Discovery
-**Next Steps**: TASK-015 (Session metadata extractor)
+**Next Steps**: TASK-016 (Session discovery service)
 
 ## Summary
 
@@ -394,7 +394,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
       - Provides buildRawContent() utility for preparing content for LLM analysis
       - Comprehensive error handling with try-catch for file operations
 
-- [ ] **TASK-015**: Session metadata extractor
+- [x] **TASK-015**: Session metadata extractor
   - **Dependencies**: TASK-014
   - **Deliverables**:
     - Extract sessionId from path
@@ -404,7 +404,21 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
   - **Acceptance Criteria**:
     - Metadata complete and accurate
     - Handles missing fields gracefully
-  - **Files**: src/parsers/session-metadata.ts
+  - **Files**: src/parsers/session-metadata.ts, tests/parsers/session-metadata.test.ts
+  - **Implementation Notes**:
+    - **Implementation File**: src/parsers/session-metadata.ts
+    - **Test File**: tests/parsers/session-metadata.test.ts (32 tests passing)
+    - **Key Functions Implemented**:
+      - `extractSessionMetadata()`: Main function to extract all session metadata from parsed conversation
+      - `calculateSessionDuration()`: Calculates duration between start and end times
+      - `formatDuration()`: Formats duration in human-readable format (e.g., "2h 15m")
+      - `extractWorkingDirectory()`: Extracts cwd from conversation metadata
+      - `hasMessages()`: Validates that session contains messages
+      - `validateSession()`: Validates session metadata completeness
+    - **All Acceptance Criteria Met**:
+      - ✅ Metadata complete and accurate (sessionId, timestamps, duration, messageCount, cwd)
+      - ✅ Handles missing fields gracefully (defaults and validation)
+    - **Test Coverage**: 32 comprehensive tests covering all functions and edge cases
 
 - [ ] **TASK-016**: Session discovery service
   - **Dependencies**: TASK-015, TASK-007
@@ -1027,7 +1041,7 @@ Update this section as tasks are completed:
 **Wave 1 (Foundation)**: 3/3 tasks completed (100%)
 **Wave 2 (Storage)**: 6/6 tasks completed (100%)
 **Wave 3 (CLI)**: 5/5 tasks completed (100%)
-**Wave 4 (Discovery)**: 1/6 tasks completed (16.7%)
+**Wave 4 (Discovery)**: 2/6 tasks completed (33.3%)
 **Wave 5 (Patterns)**: 0/7 tasks completed
 **Wave 6 (Memory)**: 0/7 tasks completed
 **Wave 7 (TUI Foundation)**: 0/7 tasks completed
@@ -1035,14 +1049,14 @@ Update this section as tasks are completed:
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 15/55 tasks (27.3%)
+**Total Progress**: 16/55 tasks (29.1%)
 
 ---
 
 ## Next Actions
 
 **Immediate**: Continue Wave 4 (Session Discovery)
-1. Implement TASK-015: Session metadata extractor
+1. Implement TASK-016: Session discovery service
 
 **Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
 - All core types implemented in src/core/types.ts
@@ -1097,6 +1111,39 @@ Update this section as tasks are completed:
 ---
 
 ## Recent Completions
+
+### TASK-015: Session Metadata Extractor (Completed 2026-01-27)
+- **Implementation**: src/parsers/session-metadata.ts
+- **Tests**: tests/parsers/session-metadata.test.ts (32 tests passing)
+- **Key Functions Implemented**:
+  - `extractSessionMetadata()`: Main function to extract all session metadata from parsed conversation
+  - `calculateSessionDuration()`: Calculates duration between start and end times
+  - `formatDuration()`: Formats duration in human-readable format (e.g., "2h 15m")
+  - `extractWorkingDirectory()`: Extracts cwd from conversation metadata
+  - `hasMessages()`: Validates that session contains messages
+  - `validateSession()`: Validates session metadata completeness
+- **Test Coverage**: 32 comprehensive tests covering:
+  - Valid session metadata extraction with all fields
+  - Duration calculation for various time ranges
+  - Duration formatting (seconds, minutes, hours)
+  - Working directory extraction from metadata
+  - Message validation and counts
+  - Session validation for required fields
+  - Edge cases: empty sessions, missing fields, invalid data
+  - All 32 tests pass successfully
+- **All Acceptance Criteria Met**:
+  - ✅ Metadata complete and accurate (sessionId, timestamps, duration, messageCount, cwd)
+  - ✅ Handles missing fields gracefully (defaults and validation)
+- **Key Implementation Details**:
+  - Extracts sessionId from conversation metadata or file path
+  - Determines startTime from first message timestamp
+  - Determines endTime from last message timestamp
+  - Calculates duration as difference between start and end times
+  - Counts messageCount from parsed conversation messages
+  - Extracts cwd (working directory) from conversation metadata
+  - Validates session completeness and provides detailed validation results
+  - Graceful handling of missing or invalid fields with sensible defaults
+- **Next Steps**: Ready for TASK-016 (Session discovery service) to scan and index sessions
 
 ### TASK-014: Conversation File Parser (Completed 2026-01-27)
 - **Implementation**: src/parsers/conversation.ts
@@ -1364,4 +1411,4 @@ Update this section as tasks are completed:
 
 ---
 
-Last updated: 2026-01-27 (Wave 4 Started - TASK-014 Complete, 1/6 tasks done)
+Last updated: 2026-01-27 (Wave 4 In Progress - TASK-015 Complete, 2/6 tasks done)
