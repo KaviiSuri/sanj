@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-**Status**: In Progress (Wave 1 Complete)
-**Progress**: 8/55 tasks completed (15%)
-**Current Focus**: Wave 2 - Storage Foundation
-**Next Steps**: TASK-008 (First-time initialization logic)
+**Status**: In Progress (Waves 1-2 Complete)
+**Progress**: 9/55 tasks completed (16%)
+**Current Focus**: Wave 3 - CLI Commands Structure
+**Next Steps**: TASK-009 (CLERC integration and command registry)
 
 ## Summary
 
@@ -170,7 +170,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Error handling with SanjError pattern for consistent error reporting
     - SessionStore implementation deferred to later wave as not immediately needed
 
-- [ ] **TASK-008**: First-time initialization logic
+- [x] **TASK-008**: First-time initialization logic
   - **Dependencies**: TASK-005, TASK-007
   - **Deliverables**:
     - Create initializeProject() function
@@ -181,7 +181,22 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Directories created if missing
     - Config file initialized
     - Idempotent (safe to run multiple times)
-  - **Files**: src/setup/init.ts
+  - **Files**: src/setup/init.ts, tests/setup/init.test.ts
+  - **Implementation Notes**:
+    - **Files Created**: src/setup/init.ts, tests/setup/init.test.ts
+    - **Key Functions**:
+      - `initializeProject()`: Main initialization function with idempotent behavior
+      - `isInitialized()`: Checks if project has been initialized
+      - `getInitializationStatus()`: Returns detailed status of initialization
+    - **Test Coverage**: 25 tests passing covering initialization, idempotency, error handling
+    - **Features**:
+      - Idempotent initialization (safe to run multiple times)
+      - Custom path support for testing (optional path parameter)
+      - Welcome message with next steps guide
+      - Creates directory structure: config dir, memories dir, observations dir, sessions dir
+      - Initializes config.json with default values
+      - Initializes analysis state with default values
+    - **Dependencies Used**: Successfully integrates config and storage functions from TASK-004, TASK-005, TASK-007
 
 ---
 
@@ -909,7 +924,7 @@ sanj/
 Update this section as tasks are completed:
 
 **Wave 1 (Foundation)**: 3/3 tasks completed (100%)
-**Wave 2 (Storage)**: 5/6 tasks completed (83%)
+**Wave 2 (Storage)**: 6/6 tasks completed (100%)
 **Wave 3 (CLI)**: 0/5 tasks completed
 **Wave 4 (Discovery)**: 0/6 tasks completed
 **Wave 5 (Patterns)**: 0/7 tasks completed
@@ -919,27 +934,27 @@ Update this section as tasks are completed:
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 8/55 tasks (15%)
+**Total Progress**: 9/55 tasks (16%)
 
 ---
 
 ## Next Actions
 
-**Immediate**: Complete Wave 2 (Storage Foundation)
-1. Implement TASK-008: First-time initialization logic
+**Immediate**: Begin Wave 3 (CLI Commands Structure)
+1. Implement TASK-009: CLERC integration and command registry
 
-**Wave 1 Status**: COMPLETE (3/3 tasks)
+**Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
 - All core types implemented in src/core/types.ts
 - Foundation ready for storage layer development
 
-**Wave 2 Status**: IN PROGRESS (5/6 tasks, 83%)
+**Wave 2 Status**: COMPLETE (6/6 tasks, 100%)
 - TASK-002-001 (storage/paths.ts): Complete - Path resolution utilities implemented
 - TASK-004 (Config schema): Complete - Default config with LLM, adapters, and thresholds
 - TASK-005 (Config file operations): Complete - Atomic read/write with error handling
 - TASK-003-010 (storage/state.ts): Complete - Analysis state management with 32 passing tests
 - TASK-006 (storage/interfaces.ts): Complete - Storage interface definitions for stores
 - TASK-007 (File-based storage): Complete - ObservationStore and MemoryStore with 162 passing tests
-- Next: First-time initialization logic (TASK-008)
+- TASK-008 (First-time initialization): Complete - Initialization logic with 25 passing tests
 
 **Milestone 1**: Waves 1-3 complete (Basic CLI functional)
 **Milestone 2**: Waves 4-6 complete (Core analysis working)
@@ -974,6 +989,35 @@ Update this section as tasks are completed:
 ---
 
 ## Recent Completions
+
+### TASK-008: First-time Initialization Logic (Completed 2026-01-27)
+- **Implementation**: src/setup/init.ts
+- **Tests**: tests/setup/init.test.ts (25 tests)
+- **Key Functions**:
+  - `initializeProject()`: Main initialization function that sets up the entire Sanj project
+  - `isInitialized()`: Checks if project has been initialized by verifying config and directories exist
+  - `getInitializationStatus()`: Returns detailed status object with flags for each component
+- **Features**:
+  - Idempotent initialization - safe to run multiple times, skips already-created resources
+  - Custom path support for testing - optional path parameter for test isolation
+  - Welcome message with next steps - displays helpful guide after initialization
+  - Directory structure creation: config dir, memories dir, observations dir, sessions dir
+  - Config file initialization with default values from TASK-004
+  - Analysis state initialization with default values from TASK-003-010
+  - Comprehensive error handling with SanjError pattern
+- **Dependencies Integrated**:
+  - Config functions from TASK-004 (getDefaultConfig)
+  - Config file operations from TASK-005 (readConfig, writeConfig)
+  - Storage paths from TASK-002-001 (path resolution)
+  - State management from TASK-003-010 (setState)
+- **Test Coverage**: 25 tests passing covering:
+  - Basic initialization of fresh project
+  - Idempotency (running initialization multiple times)
+  - Custom path support for testing
+  - Initialization status checking
+  - Directory creation
+  - Config and state file creation
+  - Error handling scenarios
 
 ### TASK-007: File-based Storage Implementation (Completed 2026-01-27)
 - **Implementation**: src/storage/observation-store.ts, src/storage/memory-store.ts
@@ -1027,4 +1071,4 @@ Update this section as tasks are completed:
 
 ---
 
-Last updated: 2026-01-27
+Last updated: 2026-01-27 (Wave 2 Complete - TASK-008 Initialization Logic)

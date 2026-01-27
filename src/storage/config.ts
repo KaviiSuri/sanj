@@ -55,6 +55,7 @@ export function getDefaultConfig(): Config {
  * If the config file doesn't exist, returns default configuration without error.
  * If the file exists but contains invalid JSON, throws an error with helpful context.
  *
+ * @param configPath - Optional custom config path for testing
  * @returns Promise resolving to Config object
  * @throws Error if config file exists but contains malformed JSON
  *
@@ -62,15 +63,17 @@ export function getDefaultConfig(): Config {
  * const config = await readConfig();
  * console.log(config.llmAdapter.type); // "opencode"
  */
-export async function readConfig(): Promise<Config> {
+export async function readConfig(configPath?: string): Promise<Config> {
+  const path = configPath || CONFIG_PATH;
+
   // Return default config if file doesn't exist
-  if (!existsSync(CONFIG_PATH)) {
+  if (!existsSync(path)) {
     return getDefaultConfig();
   }
 
   try {
     // Read file using Bun's native file API
-    const file = Bun.file(CONFIG_PATH);
+    const file = Bun.file(path);
     const text = await file.text();
 
     // Parse JSON
@@ -81,7 +84,7 @@ export async function readConfig(): Promise<Config> {
     // Provide helpful error message for malformed JSON
     if (error instanceof SyntaxError) {
       throw new Error(
-        `Failed to parse config.json: Invalid JSON format.\nPath: ${CONFIG_PATH}\nError: ${error.message}`,
+        `Failed to parse config.json: Invalid JSON format.\nPath: ${path}\nError: ${error.message}`,
       );
     }
 
@@ -100,6 +103,7 @@ export async function readConfig(): Promise<Config> {
  * Formats JSON with 2-space indentation for human readability.
  *
  * @param config - Configuration object to persist
+ * @param configPath - Optional custom config path for testing
  * @returns Promise that resolves when write completes
  * @throws Error if directory doesn't exist or write fails
  *
@@ -108,17 +112,20 @@ export async function readConfig(): Promise<Config> {
  * config.analysis.windowDays = 7;
  * await writeConfig(config);
  */
-export async function writeConfig(config: Config): Promise<void> {
+export async function writeConfig(config: Config, configPath?: string): Promise<void> {
+  const path = configPath || CONFIG_PATH;
+  const parentDir = configPath ? path.substring(0, path.lastIndexOf('/')) : SANJ_HOME;
+
   // Ensure parent directory exists
-  if (!existsSync(SANJ_HOME)) {
+  if (!existsSync(parentDir)) {
     throw new Error(
-      `Config directory does not exist: ${SANJ_HOME}\n` +
+      `Config directory does not exist: ${parentDir}\n` +
         `Please run 'sanj init' first to initialize the application.`,
     );
   }
 
   // Create temporary file path
-  const tempPath = `${CONFIG_PATH}.tmp`;
+  const tempPath = `${path}.tmp`;
 
   try {
     // Serialize config with readable formatting
@@ -128,7 +135,7 @@ export async function writeConfig(config: Config): Promise<void> {
     await Bun.write(tempPath, jsonContent);
 
     // Atomic rename (on most systems, this is atomic)
-    renameSync(tempPath, CONFIG_PATH);
+    renameSync(tempPath, path);
   } catch (error) {
     // Clean up temp file if it exists
     if (existsSync(tempPath)) {
