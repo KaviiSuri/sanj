@@ -5,7 +5,6 @@
 # Test configuration
 root = "./tests"
 timeout = 5000
-preload = []
 
 [install]
 # Install configuration

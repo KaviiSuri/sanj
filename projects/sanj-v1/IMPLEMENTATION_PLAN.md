@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Wave 1 Complete)
-**Progress**: 3/54 tasks completed (6%)
+**Progress**: 5/54 tasks completed (9%)
 **Current Focus**: Wave 2 - Storage Foundation
-**Next Steps**: Begin TASK-004 (Config schema and default values)
+**Next Steps**: TASK-006 (Storage interface definitions)
 
 ## Summary
 
@@ -75,7 +75,18 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
 
 ### JTBD-002: First-Time Setup & JTBD-006: Configuration
 
-- [ ] **TASK-004**: Config schema and default values
+- [x] **TASK-002-001**: Storage paths module (prerequisite)
+  - **Dependencies**: TASK-001
+  - **Deliverables**:
+    - Path resolution utilities for storage locations
+    - Support for custom storage directories
+  - **Acceptance Criteria**:
+    - Path resolution works correctly
+    - Supports configuration overrides
+  - **Files**: src/storage/paths.ts
+  - **Implementation Notes**: Implemented as prerequisite for config operations. Provides path resolution for configuration and memory storage directories.
+
+- [x] **TASK-004**: Config schema and default values
   - **Dependencies**: TASK-003
   - **Deliverables**:
     - Define SanjConfig interface
@@ -86,9 +97,10 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Config structure matches spec
     - Defaults validated
     - Path expansion works
-  - **Files**: src/config/schema.ts
+  - **Files**: src/storage/config.ts
+  - **Implementation Notes**: Implemented in src/storage/config.ts as getDefaultConfig(). Uses Config interface from src/core/types.ts. Defaults: OpenCode LLM with zai-coding-plan/glm-4.7 model, both session adapters enabled, both memory targets enabled, 24-hour analysis window, 0.8 similarity threshold, promotion thresholds: 3 observations, 7 days for long-term.
 
-- [ ] **TASK-005**: Config file operations (read/write)
+- [x] **TASK-005**: Config file operations (read/write)
   - **Dependencies**: TASK-004
   - **Deliverables**:
     - Implement loadConfig() with validation
@@ -99,7 +111,8 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Config loads from ~/.sanj/config.json
     - Validation catches invalid configs
     - Write is atomic
-  - **Files**: src/config/io.ts
+  - **Files**: src/storage/config.ts
+  - **Implementation Notes**: Implemented in src/storage/config.ts with readConfig() and writeConfig(). Uses Bun native file APIs, implements atomic writes with temp file + rename pattern, returns defaults if config doesn't exist, handles malformed JSON gracefully.
 
 - [ ] **TASK-006**: Storage interface definitions
   - **Dependencies**: TASK-003
@@ -866,7 +879,7 @@ sanj/
 Update this section as tasks are completed:
 
 **Wave 1 (Foundation)**: 3/3 tasks completed (100%)
-**Wave 2 (Storage)**: 0/5 tasks completed
+**Wave 2 (Storage)**: 2/5 tasks completed (40%)
 **Wave 3 (CLI)**: 0/5 tasks completed
 **Wave 4 (Discovery)**: 0/6 tasks completed
 **Wave 5 (Patterns)**: 0/7 tasks completed
@@ -876,20 +889,26 @@ Update this section as tasks are completed:
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 3/54 tasks (6%)
+**Total Progress**: 5/54 tasks (9%)
 
 ---
 
 ## Next Actions
 
-**Immediate**: Begin Wave 2 (Storage Foundation)
-1. Implement TASK-004: Config schema and default values
-2. Implement TASK-005: Config file operations (read/write)
-3. Implement TASK-006: Storage interface definitions
+**Immediate**: Continue Wave 2 (Storage Foundation)
+1. Implement TASK-006: Storage interface definitions
+2. Implement TASK-007: File-based storage implementation
+3. Implement TASK-008: First-time initialization logic
 
 **Wave 1 Status**: COMPLETE (3/3 tasks)
 - All core types implemented in src/core/types.ts
 - Foundation ready for storage layer development
+
+**Wave 2 Status**: IN PROGRESS (2/5 tasks, 40%)
+- TASK-002-001 (storage/paths.ts): Complete - Path resolution utilities implemented
+- TASK-004 (Config schema): Complete - Default config with LLM, adapters, and thresholds
+- TASK-005 (Config file operations): Complete - Atomic read/write with error handling
+- Next: Storage interface definitions
 
 **Milestone 1**: Waves 1-3 complete (Basic CLI functional)
 **Milestone 2**: Waves 4-6 complete (Core analysis working)
