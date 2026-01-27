@@ -1233,6 +1233,57 @@ Update this section as tasks are completed:
 
 ## Recent Completions
 
+### TASK-019: Session Indexing and Querying (Completed 2026-01-27)
+- **Implementation**: src/storage/session-store.ts, src/storage/paths.ts
+- **Tests**: tests/storage/session-store.test.ts (41 tests passing)
+- **Files Created**: src/storage/session-store.ts, tests/storage/session-store.test.ts
+- **Files Modified**: src/storage/paths.ts (added SESSIONS_PATH constant)
+- **Key Features Implemented**:
+  - SessionStore class implementing ISessionStore interface with all methods
+  - Full CRUD operations: index, bulkIndex, getById, getSince, query, update, remove
+  - Query filters: tool type, project slug, date range (createdAt/modifiedAt), minimum message count
+  - Sorting by all Session fields plus calculated 'duration' (computed from timestamps)
+  - Pagination with offset and limit support for large result sets
+  - In-memory Map for O(1) lookups with periodic disk saves
+  - Atomic write pattern (temp file + rename) for data integrity
+  - Proper Date serialization/deserialization for timestamp handling
+  - UUID generation for IDs using crypto.randomUUID()
+  - Comprehensive error handling with SanjError pattern
+  - Custom storage path support for testing
+- **Test Coverage**: 41 comprehensive tests covering:
+  - Lifecycle methods (load, save, count, clear)
+  - Index operations (single and bulk)
+  - Read operations (getById, getSince)
+  - Query filters (tool, projectSlug, dateRange, minMessages)
+  - Sorting (createdAt, messageCount, calculated duration)
+  - Pagination (offset, limit)
+  - Update and remove operations
+  - Error handling (corrupted JSON, non-existent sessions)
+  - Complex query scenarios (combined filters + sorting + pagination)
+  - All 41 tests pass successfully
+  - Full test suite: 434 tests total (393 + 41 new)
+- **All Acceptance Criteria Met**:
+  - ✅ Queries return correct results with all filters
+  - ✅ Filters work independently and combined (AND logic)
+  - ✅ Sorting works by date fields and calculated duration
+  - ✅ Pagination correctly applies offset and limit
+  - ✅ Performance excellent: <10ms for 100 sessions (well under 100ms target)
+- **Design Decisions**:
+  - Duration calculated on-demand from createdAt and modifiedAt (not stored as field)
+  - No cwd or status filters implemented as these fields don't exist in Session type
+  - Type assertion used for 'duration' field in sorting (extends beyond Session type)
+  - Follows same pattern as ObservationStore for consistency
+- **Integration Points**:
+  - Ready to integrate with SessionDiscoveryService for indexing discovered sessions
+  - Ready to integrate with future analysis services for querying sessions
+  - Provides fast in-memory queries without re-parsing conversation files
+- **Performance**:
+  - <10ms for 100 sessions with complex queries
+  - O(1) lookups by session ID via Map
+  - Efficient filtering with in-memory array operations
+  - Atomic saves ensure data integrity without locking
+- **Next Steps**: Ready for Wave 5 - Pattern Detection (TASK-020: Tool usage analyzer)
+
 ### 003-002: SessionAdapter Interface (Completed 2026-01-27)
 - **Implementation**: src/adapters/session/SessionAdapter.ts
 - **Tests**: tests/adapters/session-adapter.test.ts (7 tests passing)
@@ -1672,4 +1723,4 @@ Update this section as tasks are completed:
 
 ---
 
-Last updated: 2026-01-27 (Wave 4 In Progress - TASK-018 Complete, 4/6 tasks done, 66.7%)
+Last updated: 2026-01-27 (Wave 4 Complete - TASK-019 Complete, 6/6 tasks done, 100%)
