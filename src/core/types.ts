@@ -263,7 +263,7 @@ export class SanjError extends Error {
 }
 
 /**
- * Enumeration of all possible error codes in the Sanj application.
+ * Enumeration of all possible error codes in Sanj application.
  */
 export enum ErrorCode {
   CONFIG_MISSING = 'CONFIG_MISSING',
@@ -274,6 +274,11 @@ export enum ErrorCode {
   ADAPTER_UNAVAILABLE = 'ADAPTER_UNAVAILABLE',
   FILE_WRITE_FAILED = 'FILE_WRITE_FAILED',
   INVALID_STATE = 'INVALID_STATE',
+  WATCHER_START_FAILED = 'WATCHER_START_FAILED',
+  WATCHER_STOP_FAILED = 'WATCHER_STOP_FAILED',
+  WATCHER_ERROR = 'WATCHER_ERROR',
+  SESSION_PARSE_ERROR = 'SESSION_PARSE_ERROR',
+  EVENT_LISTENER_ERROR = 'EVENT_LISTENER_ERROR',
 }
 
 // =============================================================================
