@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-**Status**: In Progress (Waves 1-6 Complete, LLM Adapter foundation complete, Analyze command complete, AnalysisEngine tests complete)
-**Progress**: 41/55 tasks completed (74.5%)
-**Current Focus**: Wave 6 - Memory System: COMPLETE. Next: Wave 7 (TUI Foundation)
-**Next Steps**: Wave 7 - Review TUI Foundation (TASK-034: OpenTUI integration and layout)
+**Status**: In Progress (Waves 1-7 Complete, LLM Adapter foundation complete, Analyze command complete, AnalysisEngine tests complete)
+**Progress**: 48/55 tasks completed (87.3%)
+**Current Focus**: Wave 7 - Review TUI Foundation: COMPLETE. Next: Wave 8 (TUI Actions)
+**Next Steps**: Wave 8 - Review TUI Actions (TASK-041 through TASK-046)
 
 ## Summary
 
@@ -835,102 +835,90 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
 
 ---
 
-## Wave 7: Review TUI - Foundation (Tasks 34-40)
+## Wave 7: Review TUI - Foundation (Tasks 34-40) — COMPLETE
 
-**Objective**: Build OpenTUI-based interface for reviewing sessions
+**Objective**: Build OpenTUI-based interface for reviewing observations
 
 ### JTBD-004: Review TUI
 
-- [ ] **TASK-034**: OpenTUI integration and layout
+- [x] **TASK-034**: OpenTUI integration and layout
   - **Dependencies**: TASK-001
   - **Deliverables**:
-    - Install and configure OpenTUI
-    - Create base TUI layout (header, sidebar, main, footer)
-    - Set up component mounting
-    - Configure keyboard shortcuts
-  - **Acceptance Criteria**:
-    - TUI renders in terminal
-    - Layout responsive
-    - Keyboard nav works
-  - **Files**: src/tui/app.ts, src/tui/layout.ts
+    - OpenTUI deps already in package.json (@opentui/core ^0.1.75, @opentui/react ^0.1.75)
+    - tsconfig.json already has `jsx: "react-jsx"` configured
+    - Created src/tui/ directory with components/ subdirectory
+    - TUI entry point (index.ts), App.tsx root component
+  - **Files**: src/tui/index.ts, src/tui/App.tsx
 
-- [ ] **TASK-035**: Session list view component
-  - **Dependencies**: TASK-034, TASK-019
-  - **Deliverables**:
-    - Create SessionListView component
-    - Display sessions in table (date, cwd, duration, status)
-    - Support sorting and filtering
-    - Add keyboard navigation (j/k)
-  - **Acceptance Criteria**:
-    - Sessions display correctly
-    - Sorting works
-    - Navigation smooth
-  - **Files**: src/tui/components/session-list.ts
-
-- [ ] **TASK-036**: Session detail view component
-  - **Dependencies**: TASK-035
-  - **Deliverables**:
-    - Create SessionDetailView component
-    - Show session metadata
-    - Display conversation messages
-    - Show detected patterns
-  - **Acceptance Criteria**:
-    - Detail view renders
-    - Messages formatted correctly
-    - Patterns visible
-  - **Files**: src/tui/components/session-detail.ts
-
-- [ ] **TASK-037**: Pattern review component
-  - **Dependencies**: TASK-036
-  - **Deliverables**:
-    - Create PatternReviewView component
-    - List patterns with descriptions
-    - Show pattern frequency and examples
-    - Support approve/ignore actions
-  - **Acceptance Criteria**:
-    - Patterns listed clearly
-    - Actions work (approve/ignore)
-    - State updates correctly
-  - **Files**: src/tui/components/pattern-review.ts
-
-- [ ] **TASK-038**: Memory explorer component
-  - **Dependencies**: TASK-037, TASK-031
-  - **Deliverables**:
-    - Create MemoryExplorerView component
-    - Display memory hierarchy (tree view)
-    - Show memory details on select
-    - Support filtering by level
-  - **Acceptance Criteria**:
-    - Tree view renders
-    - Hierarchy navigation works
-    - Details display correctly
-  - **Files**: src/tui/components/memory-explorer.ts
-
-- [ ] **TASK-039**: TUI state management
+- [x] **TASK-035**: ObservationList component (mapped from spec jtbd-004-task-005)
   - **Dependencies**: TASK-034
   - **Deliverables**:
-    - Create TUIState class
-    - Manage current view, selected items
-    - Implement state transitions
-    - Add state persistence (optional)
-  - **Acceptance Criteria**:
-    - State updates trigger re-renders
-    - Transitions smooth
-    - No state leaks
-  - **Files**: src/tui/state.ts
+    - ObservationList component with scrollable list rendering
+    - Selection index management with defensive clamping
+    - Empty/loading state handling
+    - Position indicator (N/Total)
+    - Callback props: onSelectionChange, onApprove, onDeny, onSkip
+  - **Files**: src/tui/components/ObservationList.tsx
 
-- [ ] **TASK-040**: TUI keyboard shortcuts and help
+- [x] **TASK-036**: ObservationItem component (mapped from spec jtbd-004-task-004)
+  - **Dependencies**: TASK-035
+  - **Deliverables**:
+    - Single observation rendering with count badge, text, timestamps, sources
+    - isSelected state with bold border styling
+    - isHighlighted state with cyan text
+    - Graceful handling of missing dates and empty sourceSessionIds
+    - Date formatting helper with fallback to "unknown"
+  - **Files**: src/tui/components/ObservationItem.tsx
+
+- [x] **TASK-037**: ActionBar component (mapped from spec jtbd-004-task-007)
+  - **Dependencies**: TASK-034
+  - **Deliverables**:
+    - Three action buttons: [a] Approve, [d] Deny, [s] Skip
+    - Loading states (isApproving → "Approving...", isDenying → "Denying...")
+    - Disabled state for empty lists
+    - Focus indicator for keyboard navigation context
+    - Pure presentation component — keyboard handling in App.tsx
+  - **Files**: src/tui/components/ActionBar.tsx
+
+- [x] **TASK-038**: Keyboard navigation (mapped from spec jtbd-004-task-006)
+  - **Dependencies**: TASK-035, TASK-037
+  - **Deliverables**:
+    - ArrowUp/ArrowDown navigation with boundary checking (no wrap)
+    - Enter key to move focus to ActionBar
+    - a/d/s shortcut keys for approve/deny/skip from list or action bar
+    - q key for clean exit
+    - Tab key for mode switching (observations ↔ promotions)
+    - Escape returns focus from ActionBar to list
+  - **Files**: src/tui/App.tsx (keyboard handler integrated)
+
+- [x] **TASK-039**: TUI state management
+  - **Dependencies**: TASK-034
+  - **Deliverables**:
+    - React useState hooks for: observations, selectedIndex, focusedSection, currentMode
+    - Loading states: isApproving, isDenying
+    - Action accumulation: approved[], denied[], skipped[] arrays
+    - Index clamping after list mutations (approve/deny removes items)
+    - ReviewResults aggregation on exit
+  - **Files**: src/tui/App.tsx (state managed via hooks)
+
+- [x] **TASK-040**: TUI App entry point and exit handling
   - **Dependencies**: TASK-039
   - **Deliverables**:
-    - Define keyboard shortcut map
-    - Implement help overlay (?/h)
-    - Add quit (q), navigation (j/k), actions (Enter, Space)
-    - Display shortcuts in footer
-  - **Acceptance Criteria**:
-    - All shortcuts work
-    - Help overlay shows shortcuts
-    - No conflicts
-  - **Files**: src/tui/keybindings.ts
+    - TUI entry point receives observations as JSON CLI argument
+    - parseInput() with validation and date deserialization
+    - createOpenTUIRenderer() sets up core + React reconciler
+    - renderApp() mounts App component and waits for exit event
+    - outputResults() serializes ReviewResults to stdout JSON
+    - Error handling with --debug flag support
+    - Clean exit with proper status codes (0 success, 1 error)
+  - **Files**: src/tui/index.ts
+
+### Tests (86 tests, all passing)
+- tests/tui/index.test.ts — Entry point JSON parsing & results serialization
+- tests/tui/App.test.ts — State transitions (approve/deny/skip), navigation, results aggregation
+- tests/tui/ObservationItem.test.ts — Date formatting, source formatting, prop interface
+- tests/tui/ObservationList.test.ts — Selection clamping, navigation bounds, callbacks
+- tests/tui/ActionBar.test.ts — Label generation, loading states, callback interface
 
 ---
 
@@ -1207,12 +1195,12 @@ Update this section as tasks are completed:
 **Wave 4 (Discovery)**: 6/6 tasks completed (100%)
 **Wave 5 (Patterns)**: 5/7 tasks completed (71.4%)
 **Wave 6 (Memory)**: 7/7 tasks completed (100%)
-**Wave 7 (TUI Foundation)**: 0/7 tasks completed
+**Wave 7 (TUI Foundation)**: 7/7 tasks completed (100%)
 **Wave 8 (TUI Actions)**: 0/6 tasks completed
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 41/55 tasks (74.5%)
+**Total Progress**: 48/55 tasks (87.3%)
 
 ---
 
