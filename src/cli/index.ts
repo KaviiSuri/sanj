@@ -33,9 +33,9 @@ Cli()
 
   // Command: review - Review and approve pending observations
   .command("review", "Review and approve pending observations")
-  .on("review", (ctx) => {
-    console.log("sanj review - Not yet implemented");
-    console.log("This command will launch the TUI for reviewing observations.");
+  .on("review", async (ctx: any) => {
+    const { handleReview } = await import('./commands/review.ts');
+    await handleReview(ctx);
   })
 
   // Command: status - Show current state and pending items
