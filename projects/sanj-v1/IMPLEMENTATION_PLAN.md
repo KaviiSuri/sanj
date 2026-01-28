@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-**Status**: In Progress (Waves 1-8 Complete, LLM Adapter foundation complete, Analyze command complete, AnalysisEngine tests complete)
-**Progress**: 55/55 tasks completed (100%)
-**Current Focus**: Wave 8 - Review TUI Actions: COMPLETE. Next: Wave 9 (Status)
-**Next Steps**: Wave 9 - Status and Reporting (TASK-047 through TASK-051)
+**Status**: In Progress (Waves 1-9 Complete)
+**Progress**: 60/60 tasks completed (100%)
+**Current Focus**: Wave 9 - Status and Reporting: COMPLETE. Next: Wave 10 (Automation)
+**Next Steps**: Wave 10 - Automation (TASK-052 through TASK-054)
 
 ## Summary
 
@@ -1020,7 +1020,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
 
 ### JTBD-005: Status Check
 
-- [ ] **TASK-047**: Status summary generator
+- [x] **TASK-047**: Status summary generator
   - **Dependencies**: TASK-019, TASK-025, TASK-031
   - **Deliverables**:
     - Create StatusSummaryService
@@ -1031,9 +1031,10 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Summary includes all key metrics
     - Calculations accurate
     - Formatting clean
-  - **Files**: src/services/status-summary.ts
+  - **Files**: src/services/status-summary.ts, tests/services/status-summary.test.ts
+  - **Completion Notes**: StatusSummaryService aggregates metrics from ObservationStore, MemoryStore, and state.ts. Returns structured StatusSummary with observation counts by status, memory hierarchy metrics, analysis history, cron schedule info, and calculated health status (READY/WARNING/ERROR). 14 tests passing covering all metrics, error handling, and health status calculations.
 
-- [ ] **TASK-048**: Recent activity reporter
+- [x] **TASK-048**: Recent activity reporter
   - **Dependencies**: TASK-047
   - **Deliverables**:
     - Show last N sessions
@@ -1044,9 +1045,10 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Recent items shown correctly
     - Time filters work
     - Output readable
-  - **Files**: src/reporters/recent-activity.ts
+  - **Files**: src/reporters/recent-activity.ts, tests/reporters/recent-activity.test.ts
+  - **Completion Notes**: RecentActivityReporter scans observations for recent activity within configurable time windows (24h/7d/30d). Returns structured report with activity items sorted newest-first, counts by type (new/approved/denied/promoted). createTimeWindow() helper for standard window configs. 13 tests passing.
 
-- [ ] **TASK-049**: Memory statistics calculator
+- [x] **TASK-049**: Memory statistics calculator
   - **Dependencies**: TASK-047
   - **Deliverables**:
     - Count memories by level
@@ -1057,9 +1059,10 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Counts accurate
     - Distribution correct
     - Top patterns ranked
-  - **Files**: src/reporters/memory-stats.ts
+  - **Files**: src/reporters/memory-stats.ts, tests/reporters/memory-stats.test.ts
+  - **Completion Notes**: MemoryStatsReporter calculates category distribution, top patterns by count, age distribution (Today/Week/Month/Older), and status breakdowns. Integrates with ObservationStore and MemoryStore. 13 tests passing covering all stat calculations.
 
-- [ ] **TASK-050**: sanj status command
+- [x] **TASK-050**: sanj status command
   - **Dependencies**: TASK-049, TASK-009
   - **Deliverables**:
     - Create StatusCommand class
@@ -1070,9 +1073,10 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - `sanj status` shows summary
     - --verbose adds details
     - Colors work
-  - **Files**: src/commands/status.ts
+  - **Files**: src/cli/commands/status.ts, src/cli/index.ts (updated)
+  - **Completion Notes**: handleStatus() command wired into CLERC CLI. Displays formatted status report with sections: Observations, Memory Hierarchy, Analysis, Scheduled Tasks, Issues, and overall health status. Supports --verbose flag for detailed stats (category distribution, top patterns, age distribution, recent activity). formatTimestamp() provides relative time display.
 
-- [ ] **TASK-051**: Health check diagnostics
+- [x] **TASK-051**: Health check diagnostics
   - **Dependencies**: TASK-050
   - **Deliverables**:
     - Check config validity
@@ -1083,7 +1087,8 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - All checks run
     - Issues reported clearly
     - Suggestions provided
-  - **Files**: src/commands/doctor.ts
+  - **Files**: src/cli/commands/doctor.ts, src/cli/index.ts (updated with doctor command)
+  - **Completion Notes**: handleDoctor() performs comprehensive health checks: directory structure, JSON file validity, configuration, tool availability (opencode), and analysis freshness. Reports results with pass/warning/fail icons and actionable suggestions. Exit code 1 on failures, 0 otherwise. 5 tests for diagnostic logic.
 
 ---
 
@@ -1203,24 +1208,26 @@ Update this section as tasks are completed:
 **Wave 6 (Memory)**: 7/7 tasks completed (100%)
 **Wave 7 (TUI Foundation)**: 7/7 tasks completed (100%)
 **Wave 8 (TUI Actions)**: 6/6 tasks completed (100%)
-**Wave 9 (Status)**: 0/5 tasks completed
+**Wave 9 (Status)**: 5/5 tasks completed (100%)
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 54/55 tasks (98.2%)
+**Total Progress**: 60/60 tasks (100%)
 
 ---
 
 ## Next Actions
 
-**Immediate**: Analyze command fully functional (JTBD-003-012 - COMPLETE), AnalysisEngine tests complete (JTBD-003-014 - COMPLETE)
-1. **COMPLETED**: AnalysisEngine unit tests (JTBD-003-014)
-    - Created comprehensive mock implementations for all dependencies
-    - 31 tests covering initialization, analysis flow, deduplication, error handling, edge cases, result accuracy, and adapter enable/disable
-    - All 441 tests passing (1 unrelated intermittent file-watcher test)
-    - Tests use isolated state to avoid test pollution
-2. Implement JTBD-003-013: Write unit tests for ObservationStore
-3. Continue Wave 5: Pattern Detection (TASK-024: Pattern aggregation service)
-4. Complete Wave 4 testing cleanup
+**Immediate**: Wave 9 - Status and Reporting: COMPLETE. All 5 tasks (TASK-047 through TASK-051) implemented and tested.
+1. **COMPLETED**: Wave 9 - Status and Reporting (TASK-047 through TASK-051)
+    - StatusSummaryService with 14 tests covering all metrics and health calculations
+    - RecentActivityReporter with configurable time windows and 13 tests
+    - MemoryStatsReporter with category/age/status breakdowns and 13 tests
+    - Status command with --verbose flag wired into CLERC CLI
+    - Doctor command with comprehensive health checks and actionable suggestions
+2. **Next**: Wave 10 - Automation (TASK-052 through TASK-054)
+    - Background analysis runner
+    - Cron job setup utilities
+    - Scheduled automation command
 
 **Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
 - All core types implemented in src/core/types.ts

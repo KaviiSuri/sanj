@@ -40,9 +40,16 @@ Cli()
 
   // Command: status - Show current state and pending items
   .command("status", "Show current state and pending items")
-  .on("status", (ctx) => {
-    console.log("sanj status - Not yet implemented");
-    console.log("This command will display the current status and statistics.");
+  .on("status", async (ctx: any) => {
+    const { handleStatus } = await import('./commands/status.ts');
+    await handleStatus(ctx);
+  })
+
+  // Command: doctor - Run health check diagnostics
+  .command("doctor", "Run health check diagnostics")
+  .on("doctor", async (ctx: any) => {
+    const { handleDoctor } = await import('./commands/doctor.ts');
+    await handleDoctor(ctx);
   })
 
   // Command: config - View or edit configuration settings
