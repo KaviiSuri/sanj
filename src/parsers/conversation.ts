@@ -130,12 +130,12 @@ function extractContent(content: string | Array<{ type: string; text?: string; [
       .filter(block => block.type === 'text' && typeof block.text === 'string')
       .map(block => block.text as string);
 
-    // Extract all tool_use blocks
+    // Extract all tool_use blocks (skip entries without a valid name)
     const toolUses: ToolUse[] = content
-      .filter(block => block.type === 'tool_use')
+      .filter(block => block.type === 'tool_use' && (block as { name?: string }).name)
       .map(block => ({
         id: crypto.randomUUID(),
-        name: String((block as { name?: string }).name || 'unknown'),
+        name: String((block as { name?: string }).name),
         input: (block as { input?: Record<string, unknown> }).input,
         result: undefined,
         success: undefined,

@@ -120,7 +120,7 @@ describe('FileWatcher', () => {
   describe('new session detection', () => {
     it('should emit session event when marker file is created', async () => {
       const events: SessionEvent[] = [];
-      watcher = new FileWatcher({ watchPath: tempDir, debounceDelay: 100 });
+      watcher = new FileWatcher({ watchPath: tempDir, debounceDelay: 50 });
 
       watcher.on('session', (event) => {
         events.push(event);
@@ -133,7 +133,11 @@ describe('FileWatcher', () => {
       const markerPath = join(sessionDir, '.claudesettings.local.json');
       writeFileSync(markerPath, '{}');
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait with retries for chokidar to detect the file
+      const deadline = Date.now() + 3000;
+      while (events.length === 0 && Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
 
       expect(events.length).toBeGreaterThan(0);
       const newSessionEvent = events.find(e => e.type === 'newSession');

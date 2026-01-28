@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Waves 1-4 Complete, LLM Adapter foundation complete, Analyze command complete, AnalysisEngine tests complete)
-**Progress**: 28/55 tasks completed (50.9%)
+**Progress**: 29/55 tasks completed (52.7%)
 **Current Focus**: Wave 4 - Session Discovery (COMPLETE), LLM Adapter foundation (COMPLETE), Analyze command (COMPLETE), AnalysisEngine tests (COMPLETE), Tool usage analyzer (COMPLETE)
-**Next Steps**: Wave 5 - Pattern Detection (TASK-021) or JTBD-003-013 (ObservationStore tests)
+**Next Steps**: Wave 5 - Pattern Detection (TASK-022: File interaction tracker) or JTBD-003-013 (ObservationStore tests)
 
 ## Summary
 
@@ -614,7 +614,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
      - Test Coverage: 9 tests passing covering tool frequency, sequences, parameter patterns, integration, edge cases
      - All 450 tests passing (up from 440)
 
-- [ ] **TASK-021**: Error pattern detector
+- [x] **TASK-021**: Error pattern detector
   - **Dependencies**: TASK-014
   - **Deliverables**:
     - Identify error messages in output
@@ -1163,14 +1163,14 @@ Update this section as tasks are completed:
 **Wave 2 (Storage)**: 6/6 tasks completed (100%)
 **Wave 3 (CLI)**: 5/5 tasks completed (100%)
 **Wave 4 (Discovery)**: 6/6 tasks completed (100%)
-**Wave 5 (Patterns)**: 2/7 tasks completed (28.6%)
+**Wave 5 (Patterns)**: 3/7 tasks completed (42.8%)
 **Wave 6 (Memory)**: 0/7 tasks completed
 **Wave 7 (TUI Foundation)**: 0/7 tasks completed
 **Wave 8 (TUI Actions)**: 0/6 tasks completed
 **Wave 9 (Status)**: 0/5 tasks completed
 **Wave 10 (Automation)**: 0/3 tasks completed
 
-**Total Progress**: 28/55 tasks (50.9%)
+**Total Progress**: 29/55 tasks (52.7%)
 
 ---
 
@@ -1183,7 +1183,7 @@ Update this section as tasks are completed:
     - All 441 tests passing (1 unrelated intermittent file-watcher test)
     - Tests use isolated state to avoid test pollution
 2. Implement JTBD-003-013: Write unit tests for ObservationStore
-3. Continue Wave 5: Pattern Detection (TASK-020: Tool usage analyzer)
+3. Continue Wave 5: Pattern Detection (TASK-022: File interaction tracker)
 4. Complete Wave 4 testing cleanup
 
 **Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
@@ -1861,7 +1861,7 @@ Update this section as tasks are completed:
    - **Notes**: Pure interface definitions with no implementation - establishes contracts for file-based storage layer
    ---
 
-   Last updated: 2026-01-27 (Wave 5 Progress - TASK-020 Complete, 2/7 tasks done, 28.6%)
+   Last updated: 2026-01-28 (Wave 5 Progress - TASK-021 Complete, 3/7 tasks done, 42.8%)
 
 ---
 
@@ -2062,17 +2062,17 @@ Update this section as tasks are completed:
 
 ## Updated Status
 
-**Total Progress**: 28/55 tasks completed (50.9%)
+**Total Progress**: 29/55 tasks completed (52.7%)
 
-**Newly Completed**: 7 tasks (JTBD-003-003, JTBD-003-004, JTBD-003-009, JTBD-003-011, JTBD-003-012, JTBD-003-014, TASK-020)
+**Newly Completed**: 8 tasks (JTBD-003-003, JTBD-003-004, JTBD-003-009, JTBD-003-011, JTBD-003-012, JTBD-003-014, TASK-020, TASK-021)
 
 **Next Steps**:
 - Implement JTBD-003-013: Write unit tests for ObservationStore
-- Continue Wave 5: Pattern Detection (TASK-021: Error pattern detector)
+- Continue Wave 5: Pattern Detection (TASK-022: File interaction tracker)
 - Add tests for new components (adapters, deduplication, AnalysisEngine)
 - Complete Wave 4 testing cleanup (fix flaky FileWatcher test)
 
-**Wave 5 Status**: IN PROGRESS - Analyze command fully functional (JTBD-003-012 - COMPLETE), AnalysisEngine tests complete (JTBD-003-014 - COMPLETE), Tool usage analyzer (TASK-020 - COMPLETE)
+**Wave 5 Status**: IN PROGRESS - Analyze command fully functional (JTBD-003-012 - COMPLETE), AnalysisEngine tests complete (JTBD-003-014 - COMPLETE), Tool usage analyzer (TASK-020 - COMPLETE), Error pattern detector (TASK-021 - COMPLETE)
 
 **Recent Bug Fix**:
 - Removed duplicate `handleAnalyze` function in `src/cli/commands/analyze.ts`
@@ -2081,6 +2081,9 @@ Update this section as tasks are completed:
 - All 450 tests passing (1 unrelated intermittent file-watcher test)
 - Build successfully compiles to dist/cli.js
 
+**Pre-existing Test Fixes (2026-01-28)**:
+- conversation parser: content array with only tool_use blocks (no valid name) now correctly produces 0 messages
+- file-watcher: session detection test timing improved with retry loop for chokidar event detection
 ### TASK-020: Tool Usage Analyzer (Completed 2026-01-27)
 - **Implementation**: src/analyzers/tool-usage.ts, src/analyzers/base.ts, src/analyzers/index.ts
 - **Status**: COMPLETE
@@ -2122,4 +2125,12 @@ Update this section as tasks are completed:
   - TASK-014 (Conversation parser) - for extracting tool_use blocks
   - TASK-003 (Core types) - for type extensions
   - AnalysisEngine - for running programmatic analyzers
-- **Next Steps**: TASK-021 (Error pattern detector) or continue with Wave 5 pattern detection
+- **Next Steps**: TASK-022 (File interaction tracker) or continue with Wave 5 pattern detection
+
+### TASK-021: Error Pattern Detector (Completed 2026-01-28)
+- **Implementation**: src/analyzers/error-pattern.ts
+- **Status**: COMPLETE
+- **Test Coverage**: 21 tests passing
+- **Key Features**: Tool error rate detection (>20% threshold), repeated error message detection, recovery pattern extraction (tools used after errors)
+- **Integration**: Registered in analyzers/index.ts barrel export, added to AnalysisEngine default analyzers alongside ToolUsageAnalyzer
+- **All Acceptance Criteria Met**

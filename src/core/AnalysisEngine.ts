@@ -16,6 +16,7 @@ import type { LLMAdapter } from "../adapters/llm/LLMAdapter.ts";
 import type { IObservationStore } from "../storage/interfaces.ts";
 import type { PatternAnalyzer } from "../analyzers/base";
 import { ToolUsageAnalyzer } from "../analyzers/tool-usage";
+import { ErrorPatternDetector } from "../analyzers/error-pattern";
 import { parseConversation } from "../parsers/conversation";
 
 /**
@@ -126,7 +127,7 @@ export class AnalysisEngine {
     this.llmAdapter = llmAdapter;
     this.observationStore = observationStore;
     this.state = state;
-    this.patternAnalyzers = patternAnalyzers.length > 0 ? patternAnalyzers : [new ToolUsageAnalyzer()];
+    this.patternAnalyzers = patternAnalyzers.length > 0 ? patternAnalyzers : [new ToolUsageAnalyzer(), new ErrorPatternDetector()];
   }
 
   /**

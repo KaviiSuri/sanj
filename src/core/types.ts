@@ -132,6 +132,32 @@ export interface ToolUsageMetadata {
   [key: string]: unknown;
 }
 
+/**
+ * Metadata for error pattern observations.
+ */
+export interface ErrorPatternMetadata {
+  /** Name of the tool that produced the error */
+  toolName: string;
+
+  /** How many times this error occurred */
+  errorCount: number;
+
+  /** Total number of tool calls for this tool */
+  totalCalls: number;
+
+  /** Error rate as a ratio (0.0 to 1.0) */
+  errorRate: number;
+
+  /** Most common error message snippet (first 100 chars) */
+  commonErrorMessage?: string;
+
+  /** Tools used after the error (recovery pattern) */
+  recoveryTools?: string[];
+
+  /** Index signature for extensibility */
+  [key: string]: unknown;
+}
+
 // =============================================================================
 // Analyzer Types
 // =============================================================================
