@@ -32,6 +32,11 @@ import { ClaudeCodeSessionAdapter } from '../adapters/session/ClaudeCodeSession'
 import { OpenCodeSessionAdapter } from '../adapters/session/OpenCodeSession';
 import { OpenCodeLLMAdapter } from '../adapters/llm/OpenCodeLLM';
 import { ObservationStore } from '../storage/observation-store';
+import {
+  notifyAnalysisComplete,
+  notifyAnalysisError,
+  getDefaultNotificationConfig,
+} from '../utils/notifications';
 
 // =============================================================================
 // Types
@@ -267,6 +272,25 @@ export class BackgroundAnalysisService {
       this.log('INFO', `Total duration: ${(durationMs / 1000).toFixed(2)}s`);
       this.log('INFO', '=== Background Analysis Finished ===');
 
+      // Send notification if configured
+      try {
+        const notificationConfig = config.notifications || getDefaultNotificationConfig();
+        const notificationSent = notifyAnalysisComplete(
+          {
+            observationsCreated: analysisResult.observationsCreated,
+            observationsBumped: analysisResult.observationsBumped,
+            sessionsProcessed: analysisResult.sessionsProcessed,
+          },
+          notificationConfig
+        );
+        if (notificationSent) {
+          this.log('INFO', 'Desktop notification sent');
+        }
+      } catch (error) {
+        // Notification failure should not affect analysis result
+        this.log('WARN', `Failed to send notification: ${this.formatError(error)}`);
+      }
+
       return {
         success: analysisResult.status !== 'failure',
         analysisResult,
@@ -281,6 +305,15 @@ export class BackgroundAnalysisService {
 
       if (error instanceof Error && error.stack) {
         this.log('ERROR', `Stack trace: ${error.stack}`);
+      }
+
+      // Send error notification if configured
+      try {
+        const config = await readConfig();
+        const notificationConfig = config.notifications || getDefaultNotificationConfig();
+        notifyAnalysisError(errorMsg, notificationConfig);
+      } catch {
+        // Silently ignore notification errors in error handler
       }
 
       return this.createErrorResult(startTime, errorMsg);

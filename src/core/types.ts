@@ -326,6 +326,13 @@ export interface Config {
     promotionSchedule?: string;
   };
 
+  /** Optional notification configuration */
+  notifications?: {
+    enabled: boolean;
+    minObservationsCreated?: number;
+    notifyOnError?: boolean;
+  };
+
   /** Extensibility */
   metadata?: Record<string, unknown>;
 }

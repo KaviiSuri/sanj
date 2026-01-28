@@ -46,6 +46,11 @@ export function getDefaultConfig(): Config {
       observationCountThreshold: 3,
       longTermDaysThreshold: 7,
     },
+    notifications: {
+      enabled: false, // Disabled by default
+      minObservationsCreated: 1,
+      notifyOnError: true,
+    },
   };
 }
 
