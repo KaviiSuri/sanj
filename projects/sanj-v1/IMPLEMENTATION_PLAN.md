@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-**Status**: In Progress (Waves 1-9 Complete)
-**Progress**: 60/60 tasks completed (100%)
-**Current Focus**: Wave 9 - Status and Reporting: COMPLETE. Next: Wave 10 (Automation)
-**Next Steps**: Wave 10 - Automation (TASK-052 through TASK-054)
+**Status**: In Progress (Waves 1-9 Complete, Wave 10 In Progress)
+**Progress**: 61/63 tasks completed (96.8%)
+**Current Focus**: Wave 10 - Automation: TASK-052 COMPLETE. Next: TASK-053, TASK-054
+**Next Steps**: Wave 10 - Automation (TASK-053 through TASK-054)
 
 ## Summary
 
@@ -1098,7 +1098,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
 
 ### JTBD-007: Scheduled Automation
 
-- [ ] **TASK-052**: Background analysis runner
+- [x] **TASK-052**: Background analysis runner
   - **Dependencies**: TASK-026
   - **Deliverables**:
     - Create BackgroundAnalysisService
@@ -1110,6 +1110,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Errors don't crash process
     - Logs complete
   - **Files**: src/services/background-analysis.ts
+  - **Completion Notes**: BackgroundAnalysisService provides non-interactive execution of the full analysis pipeline. Key features: comprehensive logging to ~/.sanj/logs/analysis.log with timestamps and severity levels, graceful error handling (all errors caught and logged, never crashes), atomic state updates, uses existing AnalysisEngine with all session adapters and observation store integration. Exports BackgroundAnalysisService class and runBackgroundAnalysis() convenience function. All 1033 tests pass, build successful.
 
 - [ ] **TASK-053**: Cron job setup utilities
   - **Dependencies**: TASK-052
@@ -1209,25 +1210,25 @@ Update this section as tasks are completed:
 **Wave 7 (TUI Foundation)**: 7/7 tasks completed (100%)
 **Wave 8 (TUI Actions)**: 6/6 tasks completed (100%)
 **Wave 9 (Status)**: 5/5 tasks completed (100%)
-**Wave 10 (Automation)**: 0/3 tasks completed
+**Wave 10 (Automation)**: 1/3 tasks completed (33.3%)
 
-**Total Progress**: 60/60 tasks (100%)
+**Total Progress**: 61/63 tasks (96.8%)
 
 ---
 
 ## Next Actions
 
-**Immediate**: Wave 9 - Status and Reporting: COMPLETE. All 5 tasks (TASK-047 through TASK-051) implemented and tested.
+**Immediate**: Wave 10 - Automation: IN PROGRESS. TASK-052 COMPLETE, next: TASK-053, TASK-054.
 1. **COMPLETED**: Wave 9 - Status and Reporting (TASK-047 through TASK-051)
     - StatusSummaryService with 14 tests covering all metrics and health calculations
     - RecentActivityReporter with configurable time windows and 13 tests
     - MemoryStatsReporter with category/age/status breakdowns and 13 tests
     - Status command with --verbose flag wired into CLERC CLI
     - Doctor command with comprehensive health checks and actionable suggestions
-2. **Next**: Wave 10 - Automation (TASK-052 through TASK-054)
-    - Background analysis runner
-    - Cron job setup utilities
-    - Scheduled automation command
+2. **IN PROGRESS**: Wave 10 - Automation (TASK-052 through TASK-054) - 1/3 complete
+    - TASK-052 COMPLETE: BackgroundAnalysisService with non-interactive execution, comprehensive logging, graceful error handling, atomic state updates
+    - NEXT: TASK-053 - Cron job setup utilities
+    - NEXT: TASK-054 - Notification system (optional)
 
 **Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
 - All core types implemented in src/core/types.ts
@@ -2240,4 +2241,34 @@ Wave 6 tests: 179 tests across 6 new test files (domain/memory.test.ts, services
 - Review command spawns TUI as child process for clean separation
 - PromotionList mirrors ObservationList UX patterns for consistency
 
-Last updated: 2026-01-28 (Wave 8 Complete, 988 tests passing)
+---
+
+## Wave 10 Progress Summary
+
+**Wave 10 (Automation)**: 1/3 tasks completed (33.3%)
+
+### TASK-052: Background Analysis Runner (Completed 2026-01-29)
+- **Implementation**: src/services/background-analysis.ts
+- **Status**: COMPLETE
+- **Test Coverage**: All 1033 tests passing, build successful
+- **Key Features**:
+  - **Non-interactive execution**: Runs full analysis pipeline without user interaction
+  - **Comprehensive logging**: Writes to ~/.sanj/logs/analysis.log with timestamps and severity levels (INFO, WARN, ERROR)
+  - **Graceful error handling**: All errors caught and logged, process never crashes
+  - **Atomic state updates**: Uses existing state management for session tracking
+  - **Full integration**: Leverages AnalysisEngine with all session adapters (Claude Desktop, Cursor, Windsurf, Continue) and ObservationStore
+- **Exports**:
+  - BackgroundAnalysisService class with run() method
+  - runBackgroundAnalysis() convenience function for standalone execution
+- **Design Decisions**:
+  - Separate log file (analysis.log) from main application logs for automation context
+  - Silent operation suitable for cron jobs
+  - Comprehensive error context in logs for debugging scheduled runs
+  - Reuses all existing infrastructure (no duplicate logic)
+- **All Acceptance Criteria Met**:
+  - Runs without user interaction
+  - Errors don't crash process
+  - Logs complete with timestamps and severity
+- **Next**: TASK-053 (Cron job setup utilities)
+
+Last updated: 2026-01-29 (Wave 10 In Progress: 1/3 complete, 1033 tests passing)
