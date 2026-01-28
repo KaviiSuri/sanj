@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Waves 1-4 Complete, LLM Adapter foundation complete, Analyze command complete, AnalysisEngine tests complete)
-**Progress**: 31/55 tasks completed (56.4%)
-**Current Focus**: Wave 4 - Session Discovery (COMPLETE), LLM Adapter foundation (COMPLETE), Analyze command (COMPLETE), AnalysisEngine tests (COMPLETE), Tool usage analyzer (COMPLETE)
-**Next Steps**: Wave 5 - Pattern Detection (TASK-024: Pattern aggregation service)
+**Progress**: 32/55 tasks completed (58.2%)
+**Current Focus**: Wave 4 - Session Discovery (COMPLETE), LLM Adapter foundation (COMPLETE), Analyze command (COMPLETE), AnalysisEngine tests (COMPLETE), Tool usage analyzer (COMPLETE), Pattern aggregation service (TASK-024: COMPLETE)
+**Next Steps**: Wave 5 - Pattern Detection (TASK-025: Pattern storage and retrieval)
 
 ## Summary
 
@@ -665,7 +665,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Frequency counts accurate
   - **Files**: src/analyzers/workflow-detector.ts
 
-- [ ] **TASK-024**: Pattern aggregation service
+- [x] **TASK-024**: Pattern aggregation service
   - **Dependencies**: TASK-020, TASK-021, TASK-022, TASK-023
   - **Deliverables**:
     - Create PatternAggregationService
@@ -2157,4 +2157,19 @@ Update this section as tasks are completed:
   - Scores patterns by frequency and sequence length
   - Sliding window approach for accurate sequence boundary detection
 - **Integration**: Registered in AnalysisEngine default analyzers and barrel export in src/analyzers/index.ts
+- **All Acceptance Criteria Met**
+
+### TASK-024: Pattern Aggregation Service (Completed 2026-01-28)
+- **Implementation**: src/services/pattern-aggregation.ts
+- **Tests**: tests/services/pattern-aggregation.test.ts
+- **Status**: COMPLETE
+- **Test Coverage**: 60 tests passing (617 total: 60 new + 557 existing)
+- **Key Features**:
+  - PatternAggregationService class with aggregate(), deduplicate(), rankObservations(), findSimilarObservation() methods
+  - Deduplication uses token-overlap (Jaccard-style) text similarity with configurable threshold
+  - Ranking uses weighted scoring: frequency (0.5), recency with 7-day half-life exponential decay (0.3), session spread with sqrt scaling (0.2)
+  - Merging combines: counts summed, sourceSessionIds unioned, lastSeen takes later date, tags and metadata merged
+  - Category-aware deduplication: only compares observations within the same category (when both have categories)
+  - Configurable maxResults limit and custom scoring weights
+- **Test Scope**: Utility functions, deduplication, ranking, end-to-end aggregation, and edge cases
 - **All Acceptance Criteria Met**
