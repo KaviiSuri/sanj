@@ -133,6 +133,35 @@ export interface ToolUsageMetadata {
 }
 
 /**
+ * Metadata for file interaction observations.
+ */
+export interface FileInteractionMetadata {
+  /** Primary file path (or comma-separated for top-files summary) */
+  filePath: string;
+
+  /** Number of read operations on this file */
+  readCount: number;
+
+  /** Number of write operations on this file */
+  writeCount: number;
+
+  /** Number of edit operations on this file */
+  editCount: number;
+
+  /** Total interactions with this file */
+  totalInteractions: number;
+
+  /** Whether this file qualifies as a hotspot (heavy editing) */
+  isHotspot?: boolean;
+
+  /** Top files summary (for multi-file observations) */
+  topFiles?: Array<{ path: string; interactions: number; edits: number }>;
+
+  /** Index signature for extensibility */
+  [key: string]: unknown;
+}
+
+/**
  * Metadata for error pattern observations.
  */
 export interface ErrorPatternMetadata {
