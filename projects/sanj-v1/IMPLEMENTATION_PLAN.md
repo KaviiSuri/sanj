@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Waves 1-4 Complete, LLM Adapter foundation complete, Analyze command complete, AnalysisEngine tests complete)
-**Progress**: 30/55 tasks completed (54.5%)
+**Progress**: 31/55 tasks completed (56.4%)
 **Current Focus**: Wave 4 - Session Discovery (COMPLETE), LLM Adapter foundation (COMPLETE), Analyze command (COMPLETE), AnalysisEngine tests (COMPLETE), Tool usage analyzer (COMPLETE)
-**Next Steps**: Wave 5 - Pattern Detection (TASK-023: Workflow sequence detector) or TASK-024 (Pattern aggregation service)
+**Next Steps**: Wave 5 - Pattern Detection (TASK-024: Pattern aggregation service)
 
 ## Summary
 
@@ -652,7 +652,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Test Coverage: 46 tests passing covering path extraction, normalization, frequency detection, hotspot detection, top-files analysis, edge cases, and realistic session scenarios
     - All 518 tests pass (46 new + 472 existing)
 
-- [ ] **TASK-023**: Workflow sequence detector
+- [x] **TASK-023**: Workflow sequence detector
   - **Dependencies**: TASK-020
   - **Deliverables**:
     - Identify common action sequences
@@ -1175,7 +1175,7 @@ Update this section as tasks are completed:
 **Wave 2 (Storage)**: 6/6 tasks completed (100%)
 **Wave 3 (CLI)**: 5/5 tasks completed (100%)
 **Wave 4 (Discovery)**: 6/6 tasks completed (100%)
-**Wave 5 (Patterns)**: 3/7 tasks completed (42.8%)
+**Wave 5 (Patterns)**: 4/7 tasks completed (57.1%)
 **Wave 6 (Memory)**: 0/7 tasks completed
 **Wave 7 (TUI Foundation)**: 0/7 tasks completed
 **Wave 8 (TUI Actions)**: 0/6 tasks completed
@@ -1195,7 +1195,7 @@ Update this section as tasks are completed:
     - All 441 tests passing (1 unrelated intermittent file-watcher test)
     - Tests use isolated state to avoid test pollution
 2. Implement JTBD-003-013: Write unit tests for ObservationStore
-3. Continue Wave 5: Pattern Detection (TASK-022: File interaction tracker)
+3. Continue Wave 5: Pattern Detection (TASK-024: Pattern aggregation service)
 4. Complete Wave 4 testing cleanup
 
 **Wave 1 Status**: COMPLETE (3/3 tasks, 100%)
@@ -1873,7 +1873,7 @@ Update this section as tasks are completed:
    - **Notes**: Pure interface definitions with no implementation - establishes contracts for file-based storage layer
    ---
 
-   Last updated: 2026-01-28 (Wave 5 Progress - TASK-021 Complete, 3/7 tasks done, 42.8%)
+   Last updated: 2026-01-28 (Wave 5 Progress - TASK-023 Complete, 4/7 tasks done, 57.1%)
 
 ---
 
@@ -2080,11 +2080,11 @@ Update this section as tasks are completed:
 
 **Next Steps**:
 - Implement JTBD-003-013: Write unit tests for ObservationStore
-- Continue Wave 5: Pattern Detection (TASK-022: File interaction tracker)
+- Continue Wave 5: Pattern Detection (TASK-024: Pattern aggregation service)
 - Add tests for new components (adapters, deduplication, AnalysisEngine)
 - Complete Wave 4 testing cleanup (fix flaky FileWatcher test)
 
-**Wave 5 Status**: IN PROGRESS - Analyze command fully functional (JTBD-003-012 - COMPLETE), AnalysisEngine tests complete (JTBD-003-014 - COMPLETE), Tool usage analyzer (TASK-020 - COMPLETE), Error pattern detector (TASK-021 - COMPLETE)
+**Wave 5 Status**: IN PROGRESS - Analyze command fully functional (JTBD-003-012 - COMPLETE), AnalysisEngine tests complete (JTBD-003-014 - COMPLETE), Tool usage analyzer (TASK-020 - COMPLETE), Error pattern detector (TASK-021 - COMPLETE), File interaction tracker (TASK-022 - COMPLETE), Workflow sequence detector (TASK-023 - COMPLETE)
 
 **Recent Bug Fix**:
 - Removed duplicate `handleAnalyze` function in `src/cli/commands/analyze.ts`
@@ -2137,7 +2137,7 @@ Update this section as tasks are completed:
   - TASK-014 (Conversation parser) - for extracting tool_use blocks
   - TASK-003 (Core types) - for type extensions
   - AnalysisEngine - for running programmatic analyzers
-- **Next Steps**: TASK-022 (File interaction tracker) or continue with Wave 5 pattern detection
+- **Next Steps**: TASK-024 (Pattern aggregation service) - next in Wave 5 pattern detection
 
 ### TASK-021: Error Pattern Detector (Completed 2026-01-28)
 - **Implementation**: src/analyzers/error-pattern.ts
@@ -2145,4 +2145,16 @@ Update this section as tasks are completed:
 - **Test Coverage**: 21 tests passing
 - **Key Features**: Tool error rate detection (>20% threshold), repeated error message detection, recovery pattern extraction (tools used after errors)
 - **Integration**: Registered in analyzers/index.ts barrel export, added to AnalysisEngine default analyzers alongside ToolUsageAnalyzer
+- **All Acceptance Criteria Met**
+
+### TASK-023: Workflow Sequence Detector (Completed 2026-01-28)
+- **Implementation**: src/analyzers/workflow-detector.ts
+- **Status**: COMPLETE
+- **Test Coverage**: 39 tests passing
+- **Key Features**:
+  - Detects 3-5 step sequences via sliding window algorithm
+  - Identifies iterative loop patterns with period 2-3 (e.g., test -> fix -> test)
+  - Scores patterns by frequency and sequence length
+  - Sliding window approach for accurate sequence boundary detection
+- **Integration**: Registered in AnalysisEngine default analyzers and barrel export in src/analyzers/index.ts
 - **All Acceptance Criteria Met**
