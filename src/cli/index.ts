@@ -56,11 +56,11 @@ Cli()
   .command("config", "View or edit configuration settings")
   .on("config", configHandler)
 
-  // Command: cron - Manage scheduled automation
-  .command("cron", "Manage scheduled automation")
-  .on("cron", (ctx) => {
-    console.log("sanj cron - Not yet implemented");
-    console.log("This command will manage scheduled analysis automation.");
+  // Command: automate - Manage automated analysis scheduling
+  .command("automate", "Manage automated analysis scheduling")
+  .on("automate", async (ctx: any) => {
+    const { handleAutomate } = await import('./commands/automate.ts');
+    await handleAutomate(ctx);
   })
 
   // Parse command-line arguments
