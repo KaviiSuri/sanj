@@ -85,6 +85,18 @@ export const STATE_PATH = join(SANJ_HOME, "state.json");
 export const SESSIONS_PATH = join(SANJ_HOME, "sessions.json");
 
 /**
+ * Patterns storage file path
+ * Location: ~/.sanj/patterns.json
+ *
+ * Stores aggregated patterns extracted from session analysis.
+ * Supports filtering by category/type and automatic expiration.
+ *
+ * Used by: PatternStore (storage/pattern-store.ts)
+ * @example "/Users/username/.sanj/patterns.json"
+ */
+export const PATTERNS_PATH = join(SANJ_HOME, "patterns.json");
+
+/**
  * Logs directory path
  * Location: ~/.sanj/logs/
  *
@@ -110,6 +122,7 @@ export default {
   SANJ_HOME,
   CONFIG_PATH,
   OBSERVATIONS_PATH,
+  PATTERNS_PATH,
   LONG_TERM_MEMORY_PATH,
   STATE_PATH,
   SESSIONS_PATH,

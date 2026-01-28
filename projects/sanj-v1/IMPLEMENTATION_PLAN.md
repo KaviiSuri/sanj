@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Status**: In Progress (Waves 1-4 Complete, LLM Adapter foundation complete, Analyze command complete, AnalysisEngine tests complete)
-**Progress**: 32/55 tasks completed (58.2%)
-**Current Focus**: Wave 4 - Session Discovery (COMPLETE), LLM Adapter foundation (COMPLETE), Analyze command (COMPLETE), AnalysisEngine tests (COMPLETE), Tool usage analyzer (COMPLETE), Pattern aggregation service (TASK-024: COMPLETE)
-**Next Steps**: Wave 5 - Pattern Detection (TASK-025: Pattern storage and retrieval)
+**Progress**: 33/55 tasks completed (60.0%)
+**Current Focus**: Wave 5 - Pattern Detection (TASK-025: Pattern storage and retrieval: COMPLETE)
+**Next Steps**: Wave 5 - Pattern Detection (TASK-026: Session analysis orchestration)
 
 ## Summary
 
@@ -678,7 +678,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Ranking sensible
   - **Files**: src/services/pattern-aggregation.ts
 
-- [ ] **TASK-025**: Pattern storage and retrieval
+- [x] **TASK-025**: Pattern storage and retrieval
   - **Dependencies**: TASK-024, TASK-007
   - **Deliverables**:
     - Implement FilePatternStore.save()
@@ -689,7 +689,21 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Patterns persist correctly
     - Queries work with filters
     - Expiration logic correct
-  - **Files**: src/storage/pattern-store.ts
+  - **Files**: src/storage/pattern-store.ts, tests/storage/pattern-store.test.ts
+  - **Implementation Notes**:
+    - FilePatternStore class in src/storage/pattern-store.ts with full pattern lifecycle management
+    - Added PATTERNS_PATH constant to src/storage/paths.ts (~/.sanj/patterns.json)
+    - Lifecycle methods: load(), save(), count(), clear() using atomic write pattern (temp file + rename)
+    - Write operations: savePattern() for single, savePatterns() for batch (replaces existing by ID)
+    - Read operations: getById(), getAll() with optional expired inclusion
+    - Query system: category filter (single or array), dateRange on lastSeen, minCount threshold, tags (OR), sessionIds (OR), combined AND logic
+    - Sorting: configurable field + direction via SortOptions
+    - Pagination: offset + limit via PaginationOptions
+    - Expiration: configurable expirationDays (default 30), isExpired() checks days since lastSeen, getExpired() lists expired, purgeExpired() removes and persists
+    - Delete: delete() by ID with persistence
+    - Serialization: proper Date ↔ ISO string conversion for disk storage
+    - Test Coverage: 56 tests passing covering all operations, filters, expiration, edge cases, persistence, and error handling
+    - All 673 tests pass (56 new + 617 existing), build succeeds
 
 - [ ] **TASK-026**: Session analysis orchestration
   - **Dependencies**: TASK-025
