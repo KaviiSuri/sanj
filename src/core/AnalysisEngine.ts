@@ -14,12 +14,6 @@ import type { Config, Session, Observation } from "./types.ts";
 import type { SessionAdapter, Session as AdapterSession } from "../adapters/session/SessionAdapter.ts";
 import type { LLMAdapter } from "../adapters/llm/LLMAdapter.ts";
 import type { IObservationStore } from "../storage/interfaces.ts";
-import type { PatternAnalyzer } from "../analyzers/base";
-import { ToolUsageAnalyzer } from "../analyzers/tool-usage";
-import { ErrorPatternDetector } from "../analyzers/error-pattern";
-import { FileInteractionTracker } from "../analyzers/file-tracker";
-import { WorkflowSequenceDetector } from "../analyzers/workflow-detector";
-import { parseConversation } from "../parsers/conversation";
 
 /**
  * Analysis result with comprehensive statistics.
@@ -99,7 +93,6 @@ export class AnalysisEngine {
     getLastAnalysisRun(): Date | null;
     updateLastAnalysisRun(timestamp: Date): Promise<void>;
   };
-  private patternAnalyzers: PatternAnalyzer[];
 
   /**
    * Create a new AnalysisEngine instance.
@@ -111,7 +104,6 @@ export class AnalysisEngine {
    * @param llmAdapter - LLM adapter for pattern extraction
    * @param observationStore - Observation store for persisting results
    * @param state - State manager for tracking last analysis run
-   * @param patternAnalyzers - Optional array of programmatic pattern analyzers
    */
   constructor(
     config: Config,
@@ -121,15 +113,13 @@ export class AnalysisEngine {
     state: {
       getLastAnalysisRun(): Date | null;
       updateLastAnalysisRun(timestamp: Date): Promise<void>;
-    },
-    patternAnalyzers: PatternAnalyzer[] = []
+    }
   ) {
     this.config = config;
     this.sessionAdapters = sessionAdapters;
     this.llmAdapter = llmAdapter;
     this.observationStore = observationStore;
     this.state = state;
-    this.patternAnalyzers = patternAnalyzers.length > 0 ? patternAnalyzers : [new ToolUsageAnalyzer(), new ErrorPatternDetector(), new FileInteractionTracker(), new WorkflowSequenceDetector()];
   }
 
   /**
@@ -238,29 +228,11 @@ export class AnalysisEngine {
           messageCount: 0,
         };
 
-        // Parse conversation content for programmatic analyzers
-        let allExtracted: Observation[] = [];
-        const parsed = parseConversation(adapterSession.content);
-
-        for (const analyzer of this.patternAnalyzers) {
-          console.log(
-            `[AnalysisEngine] Running ${analyzer.name} analyzer on ${adapterSession.id}`
-          );
-          const observations = await analyzer.analyze(coreSession, parsed.messages);
-          console.log(
-            `[AnalysisEngine] ${analyzer.name} extracted ${observations.length} observations`
-          );
-          allExtracted.push(...observations);
-        }
-
         // Extract patterns using LLM
-        const extracted = await this.llmAdapter.extractPatterns(coreSession);
+        const allExtracted = await this.llmAdapter.extractPatterns(coreSession);
         console.log(
-          `[AnalysisEngine] Extracted ${extracted.length} patterns from ${adapterSession.id}`
+          `[AnalysisEngine] Extracted ${allExtracted.length} patterns from ${adapterSession.id}`
         );
-
-        // Merge LLM observations with programmatic analyzer observations
-        allExtracted.push(...extracted);
 
         // Store/deduplicate observations
         for (const observation of allExtracted) {
