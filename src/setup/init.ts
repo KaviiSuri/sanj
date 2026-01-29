@@ -11,6 +11,7 @@ import { join } from "path";
 import { SANJ_HOME, CONFIG_PATH, LOGS_DIR, STATE_PATH } from "../storage/paths.js";
 import { getDefaultConfig, writeConfig, readConfig } from "../storage/config.js";
 import { setState } from "../storage/state.js";
+import { injectMemoryContext } from "./memory-context-injector.js";
 import type { AnalysisState } from "../core/types.js";
 
 /**
@@ -120,8 +121,18 @@ export async function initializeProject(sanjHome?: string): Promise<InitResult> 
     await setState(initialState, statePath);
     createdFiles.push(statePath);
 
+    // Inject memory context into CLAUDE.md and AGENTS.md
+    const injectionResult = await injectMemoryContext();
+    const injectedFiles: string[] = [];
+    if (injectionResult.claudeMd.injected) {
+      injectedFiles.push(injectionResult.claudeMd.path);
+    }
+    if (injectionResult.agentsMd.injected) {
+      injectedFiles.push(injectionResult.agentsMd.path);
+    }
+
     // Build success message
-    const message = buildWelcomeMessage(createdDirectories, createdFiles);
+    const message = buildWelcomeMessage(createdDirectories, createdFiles, injectedFiles);
 
     return {
       success: true,
@@ -148,7 +159,8 @@ export async function initializeProject(sanjHome?: string): Promise<InitResult> 
  */
 function buildWelcomeMessage(
   directories: string[],
-  files: string[]
+  files: string[],
+  injectedFiles: string[] = []
 ): string {
   const lines: string[] = [];
 
@@ -164,6 +176,12 @@ function buildWelcomeMessage(
   if (files.length > 0) {
     lines.push("Created files:");
     files.forEach(file => lines.push(`  - ${file}`));
+    lines.push("");
+  }
+
+  if (injectedFiles.length > 0) {
+    lines.push("Added memory context to:");
+    injectedFiles.forEach(file => lines.push(`  - ${file}`));
     lines.push("");
   }
 

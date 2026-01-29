@@ -13,6 +13,7 @@ import { MemoryStore } from "../../storage/memory-store.ts";
 import { OBSERVATIONS_PATH } from "../../storage/paths.ts";
 import { readConfig } from "../../storage/config.ts";
 import { MemoryPromotionService } from "../../services/memory-promotion.ts";
+import { ensureMemoryContext } from "../../setup/memory-context-injector.ts";
 import { runTUI } from "../../tui/index.ts";
 
 /**
@@ -75,6 +76,11 @@ export async function handleReview(_ctx: unknown): Promise<void> {
       await memoryStore.save();
       // Save observation store with updated statuses (promoted-to-long-term)
       await store.save();
+
+      // Ensure memory context is in CLAUDE.md and AGENTS.md (lazy self-healing)
+      if (promoted > 0) {
+        await ensureMemoryContext();
+      }
     }
 
     // Show summary
