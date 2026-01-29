@@ -207,8 +207,15 @@ export class MemoryStore implements IMemoryStore {
    * Load long-term memories from disk into memory.
    * Called once during application startup or before first use.
    *
+   * Supports both legacy JSON format and new markdown format.
    * Handles missing file gracefully by initializing empty store.
-   * Throws error if file exists but contains invalid JSON.
+   *
+   * Markdown format:
+   * ```
+   * # Sanj Long-Term Memory
+   * ## category
+   * - observation text `#memoryId count`
+   * ```
    *
    * @throws {SanjError} If storage file is corrupted or inaccessible
    */
@@ -224,10 +231,14 @@ export class MemoryStore implements IMemoryStore {
       const file = Bun.file(this.storagePath);
       const text = await file.text();
 
-      // Parse JSON
-      const data = JSON.parse(text) as MemoryFile;
+      // Try parsing as markdown first (new format)
+      if (text.startsWith("# Sanj Long-Term Memory")) {
+        this.parseMarkdown(text);
+        return;
+      }
 
-      // Deserialize all memories
+      // Fall back to legacy JSON format
+      const data = JSON.parse(text) as MemoryFile;
       this.memories.clear();
       for (const serialized of data.memories) {
         const memory = deserializeMemory(serialized);
@@ -236,7 +247,7 @@ export class MemoryStore implements IMemoryStore {
     } catch (error) {
       if (error instanceof SyntaxError) {
         throw new SanjError(
-          `Failed to parse long-term-memory.md: Invalid JSON format`,
+          `Failed to parse long-term-memory.md: Invalid format`,
           ErrorCode.OBSERVATION_STORE_FAILED,
           { path: this.storagePath, error: error.message }
         );
@@ -251,7 +262,72 @@ export class MemoryStore implements IMemoryStore {
   }
 
   /**
-   * Persist current state to storage using atomic write pattern.
+   * Parse markdown format into memories.
+   * Format: `- observation text \`#memoryId count\``
+   */
+  private parseMarkdown(text: string): void {
+    this.memories.clear();
+
+    let currentCategory: Observation["category"] = "other";
+    const lines = text.split("\n");
+
+    // Regex to match: - text `#id count`
+    const lineRegex = /^- (.+?) `#([a-f0-9-]+) (\d+)`$/;
+    const categoryRegex = /^## (.+)$/;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      // Check for category header
+      const categoryMatch = trimmed.match(categoryRegex);
+      if (categoryMatch) {
+        currentCategory = categoryMatch[1] as Observation["category"];
+        continue;
+      }
+
+      // Check for memory line
+      const memoryMatch = trimmed.match(lineRegex);
+      if (memoryMatch) {
+        const [, observationText, memoryId, countStr] = memoryMatch;
+        const count = parseInt(countStr, 10);
+
+        // Create minimal observation
+        const observation: Observation = {
+          id: `obs-${memoryId}`,
+          text: observationText,
+          category: currentCategory,
+          count,
+          status: "promoted-to-long-term",
+          sourceSessionIds: [],
+          firstSeen: new Date(),
+          lastSeen: new Date(),
+        };
+
+        const memory: LongTermMemory = {
+          id: memoryId,
+          observation,
+          promotedAt: new Date(),
+          status: "approved",
+        };
+
+        this.memories.set(memory.id, memory);
+      }
+    }
+  }
+
+  /**
+   * Persist current state to storage as markdown.
+   *
+   * Format:
+   * ```markdown
+   * # Sanj Long-Term Memory
+   *
+   * ## workflow
+   * - observation text `#memoryId count`
+   *
+   * ## preference
+   * - another observation `#memoryId count`
+   * ```
    *
    * Uses temp file + rename to ensure data integrity.
    * Creates parent directory if it doesn't exist.
@@ -267,24 +343,45 @@ export class MemoryStore implements IMemoryStore {
       mkdirSync(parentDir, { recursive: true });
     }
 
-    // Serialize all memories
-    const serialized: SerializedLongTermMemory[] = [];
+    // Group memories by category
+    const byCategory = new Map<string, LongTermMemory[]>();
     for (const memory of this.memories.values()) {
-      serialized.push(serializeMemory(memory));
+      const category = memory.observation.category || "other";
+      if (!byCategory.has(category)) {
+        byCategory.set(category, []);
+      }
+      byCategory.get(category)!.push(memory);
     }
 
-    const data: MemoryFile = {
-      version: 1,
-      memories: serialized,
-    };
+    // Build markdown content
+    const lines: string[] = ["# Sanj Long-Term Memory", ""];
+
+    // Sort categories for consistent output
+    const sortedCategories = Array.from(byCategory.keys()).sort();
+
+    for (const category of sortedCategories) {
+      const memories = byCategory.get(category)!;
+      lines.push(`## ${category}`);
+
+      // Sort by count descending (most frequent first)
+      memories.sort((a, b) => b.observation.count - a.observation.count);
+
+      for (const memory of memories) {
+        // Format: - observation text `#memoryId count`
+        lines.push(`- ${memory.observation.text} \`#${memory.id} ${memory.observation.count}\``);
+      }
+
+      lines.push("");
+    }
+
+    const markdownContent = lines.join("\n");
 
     // Create temporary file path
     const tempPath = `${this.storagePath}.tmp`;
 
     try {
       // Write to temporary file
-      const jsonContent = JSON.stringify(data, null, 2);
-      await Bun.write(tempPath, jsonContent);
+      await Bun.write(tempPath, markdownContent);
 
       // Atomic rename (on most systems, this is atomic)
       renameSync(tempPath, this.storagePath);

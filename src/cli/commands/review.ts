@@ -2,13 +2,17 @@
  * Review Command Handler
  *
  * Entry point for `sanj review`. Loads pending observations,
- * runs the TUI, and handles results.
+ * runs the TUI, and handles results. Approved observations are
+ * automatically promoted to long-term memory.
  *
  * @module cli/commands/review
  */
 
 import { ObservationStore } from "../../storage/observation-store.ts";
+import { MemoryStore } from "../../storage/memory-store.ts";
 import { OBSERVATIONS_PATH } from "../../storage/paths.ts";
+import { readConfig } from "../../storage/config.ts";
+import { MemoryPromotionService } from "../../services/memory-promotion.ts";
 import { runTUI } from "../../tui/index.ts";
 
 /**
@@ -52,13 +56,33 @@ export async function handleReview(_ctx: unknown): Promise<void> {
     // Save updated observations
     await store.save();
 
-    // Show summary
+    // Promote approved observations to long-term memory
     const approved = results.approvedObservations?.length ?? 0;
     const denied = results.deniedObservations?.length ?? 0;
     const skipped = results.skippedObservations?.length ?? 0;
+    let promoted = 0;
 
+    if (approved > 0) {
+      const config = await readConfig();
+      const memoryStore = new MemoryStore(undefined, store);
+      await memoryStore.load();
+
+      const promotionService = new MemoryPromotionService(store, memoryStore, config);
+      const promotionResult = await promotionService.checkAndPromoteObservations();
+      promoted = promotionResult.promoted;
+
+      // Save memory store with promoted memories
+      await memoryStore.save();
+      // Save observation store with updated statuses (promoted-to-long-term)
+      await store.save();
+    }
+
+    // Show summary
     console.log("\nReview complete:");
     console.log(`  Approved: ${approved}`);
+    if (promoted > 0) {
+      console.log(`  Promoted to long-term memory: ${promoted}`);
+    }
     console.log(`  Denied:   ${denied}`);
     console.log(`  Skipped:  ${skipped}`);
 
