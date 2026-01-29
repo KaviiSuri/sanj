@@ -88,7 +88,9 @@ export class OpenCodeLLMAdapter implements LLMAdapter {
 
     try {
       const prompt = this.buildExtractionPrompt(session);
-      const response = await this.callOpenCode(prompt);
+      // Use session file's directory as cwd so OpenCode can read the file
+      const cwd = session.path.substring(0, session.path.lastIndexOf('/'));
+      const response = await this.callOpenCode(prompt, cwd);
 
       if (!response) {
         return [];
@@ -197,55 +199,37 @@ Respond with ONLY "YES" or "NO".`;
    * @returns Formatted prompt string
    */
   private buildExtractionPrompt(session: Session): string {
-    // Truncate content if too long (LLM context limits)
-    const maxContentLength = 50000;
-    const content = session.content
-      ? (session.content.length > maxContentLength
-          ? session.content.slice(0, maxContentLength) + '\n\n[TRUNCATED]'
-          : session.content)
-      : '[No content available]';
+    return `Read the file at: ${session.path}
 
-    return `Analyze the following coding session to identify recurring patterns, preferences, and insights about the user's workflow.
+This file is a JSONL log of ONE coding assistant conversation. Analyze it and extract observations about the user's preferences, patterns, and habits.
 
-Session ID: ${session.id}
-Project: ${session.projectSlug || 'unknown'}
-Created: ${session.createdAt.toISOString()}
-Modified: ${session.modifiedAt.toISOString()}
+Categories:
+- preference: Language/tool choices (e.g., "prefers TypeScript")
+- pattern: Repeated behaviors (e.g., "runs git status first")
+- workflow: How they work (e.g., "tests before committing")
+- tool-choice: Tools used (e.g., "uses Bun instead of npm")
+- style: Coding style (e.g., "prefers functional programming")
 
-=== SESSION CONTENT ===
-${content}
-=== END SESSION CONTENT ===
+RESPOND WITH ONLY A JSON ARRAY. NO OTHER TEXT.
 
-Extract observations about:
-1. User preferences (e.g., "prefers TypeScript over JavaScript")
-2. Recurring patterns (e.g., "always starts with git status")
-3. Workflow habits (e.g., "runs tests before committing")
-4. Tool choices (e.g., "uses vim keybindings")
-5. Coding style decisions (e.g., "prefers functional programming")
+Example: [{"text": "uses TypeScript", "category": "preference", "confidence": 0.8}]
 
-Return a JSON array of observations. Each observation should have:
-{
-  "text": "concise description of the observation",
-  "category": "preference|pattern|workflow|tool-choice|style|other",
-  "confidence": 0.0-1.0
-}
-
-Only include observations with confidence >= 0.6.
-Return empty array if no patterns found.
-`;
+Return [] if nothing notable found.`;
   }
 
   /**
    * Call OpenCode CLI with the given prompt.
    *
    * @param prompt - Prompt string to send to LLM
+   * @param cwd - Optional working directory for the OpenCode process
    * @returns LLM response string, or null if failed
    */
-  private async callOpenCode(prompt: string): Promise<string | null> {
+  private async callOpenCode(prompt: string, cwd?: string): Promise<string | null> {
     try {
       const proc = Bun.spawn(['opencode', 'run', '--model', this.model, prompt], {
         stdout: 'pipe',
         stderr: 'pipe',
+        cwd: cwd,
       });
 
       const stdout = await new Response(proc.stdout).text();
@@ -271,16 +255,24 @@ Return empty array if no patterns found.
    */
   private parseLLMResponse(response: string, session: Session): Observation[] {
     try {
-      const data = JSON.parse(response);
+      // Try to extract JSON array from response (in case LLM added extra text)
+      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      const jsonStr = jsonMatch ? jsonMatch[0] : response;
+
+      console.log(`[OpenCodeLLM] Raw response (first 500 chars): ${response.substring(0, 500)}`);
+
+      const data = JSON.parse(jsonStr);
 
       if (!Array.isArray(data)) {
+        console.log(`[OpenCodeLLM] Response is not an array`);
         return [];
       }
 
       return data
         .map((item) => this.createObservation(item, session))
         .filter((obs): obs is Observation => obs !== null);
-    } catch {
+    } catch (error) {
+      console.log(`[OpenCodeLLM] Failed to parse response: ${error instanceof Error ? error.message : 'Unknown'}`);
       return [];
     }
   }
