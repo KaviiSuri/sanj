@@ -33,6 +33,7 @@ interface AnalyzeFlags {
   verbose?: boolean;
   'no-write-state'?: boolean;
   since?: string;
+  limit?: number;
 }
 
 /**
@@ -93,6 +94,7 @@ export async function handleAnalyze(ctx: any): Promise<void> {
   const verbose = flags.verbose || false;
   const noWriteState = flags['no-write-state'] === true;
   const sinceDate = flags.since ? new Date(flags.since) : undefined;
+  const limit = flags.limit;
 
   // Initialize logging
   log('INFO', 'Analysis started');
@@ -191,7 +193,7 @@ export async function handleAnalyze(ctx: any): Promise<void> {
     logAndPrint(verbose, 'INFO', 'Running analysis...');
 
     // Run analysis
-    const result: AnalysisResult = await engine.run({ since: effectiveSince || undefined });
+    const result: AnalysisResult = await engine.run({ since: effectiveSince || undefined, limit });
 
     // Log detailed results
     log('INFO', `Analysis complete: ${result.status}`);

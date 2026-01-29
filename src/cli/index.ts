@@ -28,10 +28,23 @@ Cli()
   .on("init", initHandler)
 
   // Command: analyze - Analyze recent coding sessions
-  .command("analyze", "Analyze recent coding sessions")
+  .command("analyze", "Analyze recent coding sessions", {
+    flags: {
+      limit: {
+        type: Number,
+        description: "Limit number of sessions to process",
+        alias: "l",
+      },
+      verbose: {
+        type: Boolean,
+        description: "Show verbose output",
+        alias: "v",
+      },
+    },
+  })
   .on("analyze", async (ctx: any) => {
     const { handleAnalyze } = await import('./commands/analyze.ts');
-    await handleAnalyze(ctx);
+    await handleAnalyze(ctx.flags);
   })
 
   // Command: review - Review and approve pending observations

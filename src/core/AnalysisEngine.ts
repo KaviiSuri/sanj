@@ -70,6 +70,9 @@ export interface AnalysisOptions {
 
   /** Optional: Override last analysis timestamp */
   since?: Date;
+
+  /** Optional: Limit number of sessions to process */
+  limit?: number;
 }
 
 /**
@@ -206,12 +209,17 @@ export class AnalysisEngine {
       }
     }
 
+    // Apply limit if specified
+    const sessionsToProcess = options.limit
+      ? allAdapterSessions.slice(0, options.limit)
+      : allAdapterSessions;
+
     console.log(
-      `[AnalysisEngine] Processing ${allAdapterSessions.length} total sessions...`
+      `[AnalysisEngine] Processing ${sessionsToProcess.length} sessions${options.limit ? ` (limited from ${allAdapterSessions.length})` : ''}...`
     );
 
     // Process each session
-    for (const adapterSession of allAdapterSessions) {
+    for (const adapterSession of sessionsToProcess) {
       try {
         console.log(
           `[AnalysisEngine] Processing session: ${adapterSession.id} (${adapterSession.toolName})`
