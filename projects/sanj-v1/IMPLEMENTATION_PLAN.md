@@ -3,13 +3,13 @@
 ## Project Overview
 
 **Status**: Complete (All 10 Waves Complete)
-**Progress**: 63/63 tasks completed (100%)
+**Progress**: 57/57 tasks completed (100%)
 **Current Focus**: All tasks complete - project ready for production use
 **Next Steps**: None - implementation complete
 
 ## Summary
 
-Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patterns, and maintains a hierarchical memory system. The implementation is organized into 10 waves, with each wave building upon the previous ones. This plan tracks all 55 tasks across 7 Jobs to Be Done (JTBDs).
+Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patterns using LLM analysis, and maintains a hierarchical memory system. The implementation is organized into 10 waves, with each wave building upon the previous ones. This plan tracks all 57 tasks across 7 Jobs to Be Done (JTBDs).
 
 **Technology Stack**:
 - Language: TypeScript
@@ -587,99 +587,14 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
 
 ---
 
-## Wave 5: Pattern Detection (Tasks 20-26)
+## Wave 5: Pattern Storage (Task 25)
 
-**Objective**: Analyze sessions and extract patterns
+**Objective**: Store and retrieve extracted patterns
 
 ### JTBD-003: Session Analysis
 
- - [x] **TASK-020**: Tool usage analyzer
-   - **Dependencies**: TASK-014
-   - **Deliverables**:
-     - Extract tool calls from conversation
-     - Count frequency per tool
-     - Track sequences (e.g., Read → Edit → Bash)
-     - Calculate tool success rates
-   - **Acceptance Criteria**:
-     - All tool calls identified
-     - Counts accurate
-     - Sequences detected
-   - **Files**: src/analyzers/tool-usage.ts
-   - **Implementation Notes**:
-     - Extended core types with ToolUse, ToolUsageMetadata, PatternAnalyzer interfaces
-     - Enhanced conversation parser to extract tool_use blocks from messages
-     - Created analyzer infrastructure in src/analyzers/ with PatternAnalyzer base class
-     - Implemented ToolUsageAnalyzer with comprehensive tool tracking
-     - Integrated with AnalysisEngine to run programmatic analyzers before LLM extraction
-     - Test Coverage: 9 tests passing covering tool frequency, sequences, parameter patterns, integration, edge cases
-     - All 450 tests passing (up from 440)
-
-- [x] **TASK-021**: Error pattern detector
-  - **Dependencies**: TASK-014
-  - **Deliverables**:
-    - Identify error messages in output
-    - Categorize errors (syntax, runtime, test failures)
-    - Extract error context (file, line, message)
-    - Track recurring errors
-  - **Acceptance Criteria**:
-    - Common errors detected
-    - Categorization accurate
-    - Context extracted correctly
-  - **Files**: src/analyzers/error-detector.ts
-
- - [x] **TASK-022**: File interaction tracker
-  - **Dependencies**: TASK-020
-  - **Deliverables**:
-    - Track Read/Write/Edit operations
-    - Identify frequently modified files
-    - Detect file hotspots (>10 edits)
-    - Extract file paths correctly
-  - **Acceptance Criteria**:
-    - All file operations tracked
-    - Paths normalized
-    - Hotspots identified correctly
-  - **Files**: src/analyzers/file-tracker.ts, tests/analyzers/file-tracker.test.ts
-  - **Implementation Notes**:
-    - Created src/analyzers/file-tracker.ts with FileInteractionTracker class
-    - Added FileInteractionMetadata type to src/core/types.ts
-    - Registered analyzer in src/analyzers/index.ts barrel export
-    - Added to default analyzers in AnalysisEngine constructor
-    - Extracts file paths from tool inputs: file_path, filePath, path parameters
-    - Normalizes paths (collapses multiple slashes, removes trailing slash)
-    - Three observation types: frequently-modified (>=3 edits), hotspot (>=10 edits), top-files (multi-file summary)
-    - Read operations tracked separately from write/edit operations
-    - Read-only files not reported as frequently modified
-    - Test Coverage: 46 tests passing covering path extraction, normalization, frequency detection, hotspot detection, top-files analysis, edge cases, and realistic session scenarios
-    - All 518 tests pass (46 new + 472 existing)
-
-- [x] **TASK-023**: Workflow sequence detector
-  - **Dependencies**: TASK-020
-  - **Deliverables**:
-    - Identify common action sequences
-    - Detect patterns (e.g., test → fix → test)
-    - Use sliding window for sequence detection
-    - Score patterns by frequency
-  - **Acceptance Criteria**:
-    - Common workflows detected
-    - Minimum 3-action sequences
-    - Frequency counts accurate
-  - **Files**: src/analyzers/workflow-detector.ts
-
-- [x] **TASK-024**: Pattern aggregation service
-  - **Dependencies**: TASK-020, TASK-021, TASK-022, TASK-023
-  - **Deliverables**:
-    - Create PatternAggregationService
-    - Merge patterns from all analyzers
-    - Deduplicate similar patterns
-    - Rank by significance (frequency, recency)
-  - **Acceptance Criteria**:
-    - All analyzer outputs combined
-    - Deduplication works
-    - Ranking sensible
-  - **Files**: src/services/pattern-aggregation.ts
-
 - [x] **TASK-025**: Pattern storage and retrieval
-  - **Dependencies**: TASK-024, TASK-007
+  - **Dependencies**: TASK-007
   - **Deliverables**:
     - Implement FilePatternStore.save()
     - Implement FilePatternStore.query()
@@ -703,29 +618,6 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
     - Delete: delete() by ID with persistence
     - Serialization: proper Date ↔ ISO string conversion for disk storage
     - Test Coverage: 56 tests passing covering all operations, filters, expiration, edge cases, persistence, and error handling
-    - All 673 tests pass (56 new + 617 existing), build succeeds
-
-- [x] **TASK-026**: Session analysis orchestration
-  - **Dependencies**: TASK-025
-  - **Deliverables**:
-    - Create SessionAnalysisService
-    - Orchestrate: load session → analyze → extract patterns → store
-    - Add analysis status tracking
-    - Support batch analysis
-  - **Acceptance Criteria**:
-    - Single session analysis works
-    - Batch analysis efficient
-    - Status tracked correctly
-  - **Files**: src/services/session-analysis.ts
-  - **Implementation Notes**:
-    - SessionAnalysisService in src/services/session-analysis.ts orchestrates the full analysis lifecycle
-    - Single session pipeline: parse → run analyzers → aggregate → store, each step executed sequentially with typed intermediate results
-    - Batch analysis with chunked concurrency (default 5 concurrent sessions) to balance throughput and resource usage
-    - Write-safe batch persistence: analysis runs concurrently but storage writes are serialized to avoid temp-file rename races on the shared patterns.json
-    - Per-session status tracking with four states: pending / in-progress / completed / failed, exposed via getStatus() and getStatuses()
-    - Error isolation: failures in one session are caught and recorded as failed status without aborting the remaining batch
-    - 23 tests passing in tests/services/session-analysis.test.ts covering single analysis, batch processing, status tracking, concurrency limits, error isolation, and edge cases
-    - Full test suite: 695/696 tests pass (1 pre-existing flaky file-watcher timing test)
 
 ---
 
@@ -1099,7 +991,7 @@ Sanj is a CLI tool that monitors AI coding assistant sessions, identifies patter
 ### JTBD-007: Scheduled Automation
 
 - [x] **TASK-052**: Background analysis runner
-  - **Dependencies**: TASK-026
+  - **Dependencies**: TASK-025
   - **Deliverables**:
     - Create BackgroundAnalysisService
     - Run full analysis pipeline
@@ -1149,7 +1041,6 @@ sanj/
 ├── bin/
 │   └── sanj.ts              # CLI entry point
 ├── src/
-│   ├── analyzers/           # Pattern detection (Wave 5)
 │   ├── cli/                 # CLERC integration (Wave 3)
 │   ├── commands/            # CLI commands (Waves 3, 8, 9, 10)
 │   ├── config/              # Configuration (Wave 2)
@@ -1185,7 +1076,7 @@ sanj/
 5. Run `sanj doctor` after each wave to verify health
 
 ### Testing Strategy
-- Unit tests: Individual analyzers, parsers, services
+- Unit tests: Parsers, services, adapters
 - Integration tests: Storage layer, CLI commands
 - E2E tests: Full workflows (init → analyze → review → status)
 - TUI tests: Component rendering and interactions
@@ -1206,14 +1097,14 @@ Update this section as tasks are completed:
 **Wave 2 (Storage)**: 6/6 tasks completed (100%)
 **Wave 3 (CLI)**: 5/5 tasks completed (100%)
 **Wave 4 (Discovery)**: 6/6 tasks completed (100%)
-**Wave 5 (Patterns)**: 5/7 tasks completed (71.4%)
+**Wave 5 (Pattern Storage)**: 1/1 tasks completed (100%)
 **Wave 6 (Memory)**: 7/7 tasks completed (100%)
 **Wave 7 (TUI Foundation)**: 7/7 tasks completed (100%)
 **Wave 8 (TUI Actions)**: 6/6 tasks completed (100%)
 **Wave 9 (Status)**: 5/5 tasks completed (100%)
 **Wave 10 (Automation)**: 3/3 tasks completed (100%)
 
-**Total Progress**: 63/63 tasks (100%)
+**Total Progress**: 57/57 tasks (100%)
 
 ---
 
@@ -1354,7 +1245,7 @@ Update this section as tasks are completed:
   - O(1) lookups by session ID via Map
   - Efficient filtering with in-memory array operations
   - Atomic saves ensure data integrity without locking
-- **Next Steps**: Ready for Wave 5 - Pattern Detection (TASK-020: Tool usage analyzer)
+- **Next Steps**: Ready for Wave 5 - Pattern Storage (TASK-025)
 
 ### 003-002: SessionAdapter Interface (Completed 2026-01-27)
 - **Implementation**: src/adapters/session/SessionAdapter.ts
@@ -1906,7 +1797,7 @@ Update this section as tasks are completed:
    - **Notes**: Pure interface definitions with no implementation - establishes contracts for file-based storage layer
    ---
 
-   Last updated: 2026-01-28 (Wave 5 Progress - TASK-026 Complete, 5/7 tasks done, 71.4%)
+   Last updated: 2026-01-29 (All waves complete)
 
 ---
 
@@ -2104,108 +1995,6 @@ Update this section as tasks are completed:
     - Adapter enable/disable logic
 
 ---
-
-## Updated Status
-
-**Total Progress**: 29/55 tasks completed (52.7%)
-
-**Newly Completed**: 8 tasks (JTBD-003-003, JTBD-003-004, JTBD-003-009, JTBD-003-011, JTBD-003-012, JTBD-003-014, TASK-020, TASK-021)
-
-**Next Steps**:
-- Implement JTBD-003-013: Write unit tests for ObservationStore
-- Continue Wave 5: Pattern Detection (TASK-024: Pattern aggregation service)
-- Add tests for new components (adapters, deduplication, AnalysisEngine)
-- Complete Wave 4 testing cleanup (fix flaky FileWatcher test)
-
-**Wave 5 Status**: IN PROGRESS - Analyze command fully functional (JTBD-003-012 - COMPLETE), AnalysisEngine tests complete (JTBD-003-014 - COMPLETE), Tool usage analyzer (TASK-020 - COMPLETE), Error pattern detector (TASK-021 - COMPLETE), File interaction tracker (TASK-022 - COMPLETE), Workflow sequence detector (TASK-023 - COMPLETE), Pattern aggregation service (TASK-024 - COMPLETE), Pattern storage and retrieval (TASK-025 - COMPLETE), Session analysis orchestration (TASK-026 - COMPLETE)
-
-**Recent Bug Fix**:
-- Removed duplicate `handleAnalyze` function in `src/cli/commands/analyze.ts`
-- Fixed type errors (added AnalyzeFlags interface, fixed return types)
-- Fixed package.json build script to include entry point
-- All 450 tests passing (1 unrelated intermittent file-watcher test)
-- Build successfully compiles to dist/cli.js
-
-**Pre-existing Test Fixes (2026-01-28)**:
-- conversation parser: content array with only tool_use blocks (no valid name) now correctly produces 0 messages
-- file-watcher: session detection test timing improved with retry loop for chokidar event detection
-### TASK-020: Tool Usage Analyzer (Completed 2026-01-27)
-- **Implementation**: src/analyzers/tool-usage.ts, src/analyzers/base.ts, src/analyzers/index.ts
-- **Status**: COMPLETE
-- **Files Modified**: src/core/types.ts, src/parsers/conversation.ts, src/core/AnalysisEngine.ts
-- **Tests**: tests/analyzers/tool-usage.test.ts (9 tests passing)
-- **Changes Made**:
-  1. Extended core types:
-     - Added ToolUse interface for tool call data (name, input, result)
-     - Extended Message interface to include toolUses array
-     - Added ToolUsageMetadata interface for observation metadata
-     - Added PatternAnalyzer interface and ToolUsageMetadata index signature
-     - Added ProgrammaticPatternAnalyzer base class
-  2. Enhanced conversation parser:
-     - Modified parseConversation to extract tool_use blocks from messages
-     - Created ExtractedContent interface to return both text and tool uses
-  3. Created analyzer infrastructure:
-     - src/analyzers/base.ts - PatternAnalyzer interface and base class
-     - src/analyzers/tool-usage.ts - Complete ToolUsageAnalyzer implementation
-     - src/analyzers/index.ts - Barrel export
-  4. Integrated with AnalysisEngine:
-     - Added patternAnalyzers parameter to constructor
-     - Added ToolUsageAnalyzer as default analyzer
-     - Modified run() to parse session content and run analyzers before LLM
-     - Merged results from programmatic analyzers with LLM extraction
-  5. Added comprehensive tests:
-     - tests/analyzers/tool-usage.test.ts - 9 tests passing
-     - Tests cover: tool frequency, tool sequences, parameter patterns, integration, edge cases
-  6. Test results:
-     - 450 tests passing (up from 440)
-     - 1 pre-existing file-watcher test still failing
-     - 9 new tests added for ToolUsageAnalyzer
-- **Acceptance Criteria**: All met
-  - ✅ All tool calls identified from conversation.jsonl files
-  - ✅ Counts accurate per tool type
-  - ✅ Sequences detected (e.g., Read → Edit → Bash)
-  - ✅ Parameter patterns extracted and analyzed
-  - ✅ Integration with AnalysisEngine working correctly
-- **Dependencies Used**:
-  - TASK-014 (Conversation parser) - for extracting tool_use blocks
-  - TASK-003 (Core types) - for type extensions
-  - AnalysisEngine - for running programmatic analyzers
-- **Next Steps**: TASK-024 (Pattern aggregation service) - next in Wave 5 pattern detection
-
-### TASK-021: Error Pattern Detector (Completed 2026-01-28)
-- **Implementation**: src/analyzers/error-pattern.ts
-- **Status**: COMPLETE
-- **Test Coverage**: 21 tests passing
-- **Key Features**: Tool error rate detection (>20% threshold), repeated error message detection, recovery pattern extraction (tools used after errors)
-- **Integration**: Registered in analyzers/index.ts barrel export, added to AnalysisEngine default analyzers alongside ToolUsageAnalyzer
-- **All Acceptance Criteria Met**
-
-### TASK-023: Workflow Sequence Detector (Completed 2026-01-28)
-- **Implementation**: src/analyzers/workflow-detector.ts
-- **Status**: COMPLETE
-- **Test Coverage**: 39 tests passing
-- **Key Features**:
-  - Detects 3-5 step sequences via sliding window algorithm
-  - Identifies iterative loop patterns with period 2-3 (e.g., test -> fix -> test)
-  - Scores patterns by frequency and sequence length
-  - Sliding window approach for accurate sequence boundary detection
-- **Integration**: Registered in AnalysisEngine default analyzers and barrel export in src/analyzers/index.ts
-- **All Acceptance Criteria Met**
-
-### TASK-024: Pattern Aggregation Service (Completed 2026-01-28)
-- **Implementation**: src/services/pattern-aggregation.ts
-- **Tests**: tests/services/pattern-aggregation.test.ts
-- **Status**: COMPLETE
-- **Test Coverage**: 60 tests passing (617 total: 60 new + 557 existing)
-- **Key Features**:
-  - PatternAggregationService class with aggregate(), deduplicate(), rankObservations(), findSimilarObservation() methods
-  - Deduplication uses token-overlap (Jaccard-style) text similarity with configurable threshold
-  - Ranking uses weighted scoring: frequency (0.5), recency with 7-day half-life exponential decay (0.3), session spread with sqrt scaling (0.2)
-  - Merging combines: counts summed, sourceSessionIds unioned, lastSeen takes later date, tags and metadata merged
-  - Category-aware deduplication: only compares observations within the same category (when both have categories)
-  - Configurable maxResults limit and custom scoring weights
-- **Test Scope**: Utility functions, deduplication, ranking, end-to-end aggregation, and edge cases
-- **All Acceptance Criteria Met**
 
 ---
 
