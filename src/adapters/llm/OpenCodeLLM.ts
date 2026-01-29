@@ -234,7 +234,7 @@ Return empty array if no patterns found.
    */
   private async callOpenCode(prompt: string): Promise<string | null> {
     try {
-      const proc = Bun.spawn(['opencode', 'run', '--model', this.model, prompt, '-q'], {
+      const proc = Bun.spawn(['opencode', 'run', '--model', this.model, prompt], {
         stdout: 'pipe',
         stderr: 'pipe',
       });
