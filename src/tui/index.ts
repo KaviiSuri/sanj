@@ -7,8 +7,8 @@
  * and outputs review results as JSON to stdout on exit.
  */
 
-import { createRenderer } from "@opentui/core";
-import { createReactRenderer } from "@opentui/react";
+import { createCliRenderer } from "@opentui/core";
+import { createRoot } from "@opentui/react";
 import React from "react";
 import { App } from "./App.tsx";
 import type { Observation } from "../core/types.ts";
@@ -53,48 +53,31 @@ function parseInput(): Observation[] {
 }
 
 // ---------------------------------------------------------------------------
-// Renderer Setup
-// ---------------------------------------------------------------------------
-
-function createOpenTUIRenderer() {
-  const renderer = createRenderer({});
-  const reactRenderer = createReactRenderer(renderer);
-  return { renderer, reactRenderer };
-}
-
-// ---------------------------------------------------------------------------
 // App Rendering & Results Collection
 // ---------------------------------------------------------------------------
 
-async function renderApp(
-  {
-    renderer,
-    reactRenderer,
-  }: {
-    renderer: ReturnType<typeof createRenderer>;
-    reactRenderer: ReturnType<typeof createReactRenderer>;
-  },
-  observations: Observation[]
-): Promise<ReviewResults> {
-  const results: ReviewResults = {
-    approvedObservations: [],
-    deniedObservations: [],
-    skippedObservations: [],
-  };
+async function renderApp(observations: Observation[]): Promise<ReviewResults> {
+  return new Promise<ReviewResults>(async (resolve) => {
+    const results: ReviewResults = {
+      approvedObservations: [],
+      deniedObservations: [],
+      skippedObservations: [],
+    };
 
-  const element = React.createElement(App, {
-    observations,
-    onResults: (result: ReviewResults) => {
-      Object.assign(results, result);
-    },
-  });
-
-  reactRenderer.render(element);
-
-  return new Promise<ReviewResults>((resolve) => {
-    renderer.on("exit", () => {
-      resolve(results);
+    const renderer = await createCliRenderer({
+      exitOnCtrlC: false, // Handle Ctrl+C ourselves
     });
+
+    const element = React.createElement(App, {
+      observations,
+      onResults: (result: ReviewResults) => {
+        Object.assign(results, result);
+        resolve(results);
+        // Note: renderer.destroy() is called by App component on exit
+      },
+    });
+
+    createRoot(renderer).render(element);
   });
 }
 
@@ -120,14 +103,25 @@ function handleError(error: unknown): void {
 }
 
 // ---------------------------------------------------------------------------
-// Main
+// Exported Run Function
+// ---------------------------------------------------------------------------
+
+/**
+ * Run the TUI with the given observations.
+ * Can be called directly from review command without subprocess.
+ */
+export async function runTUI(observations: Observation[]): Promise<ReviewResults> {
+  return renderApp(observations);
+}
+
+// ---------------------------------------------------------------------------
+// Main (for standalone execution)
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
   try {
     const observations = parseInput();
-    const rendererPair = createOpenTUIRenderer();
-    const results = await renderApp(rendererPair, observations);
+    const results = await runTUI(observations);
     outputResults(results);
     process.exit(0);
   } catch (error) {
@@ -136,4 +130,7 @@ async function main(): Promise<void> {
   }
 }
 
-main();
+// Only run main if executed directly (not imported)
+if (import.meta.main) {
+  main();
+}

@@ -1,26 +1,23 @@
 /**
- * ObservationList — Scrollable list of ObservationItem components.
+ * ObservationList — Virtualized list of observations with scroll indicators.
  *
- * Manages:
- * - Rendering all observations via ObservationItem
- * - Visual selection indicator based on selectedIndex
- * - Empty and loading states
- * - Proper spacing between items
+ * Layout (when scrolled):
+ *   (3 more above)
  *
- * Layout:
- * ┌─ Observations ──────────────────────────────┐
- * │ ┌─────────────────────────────────────────┐ │
- * │ │ [5x] Pattern about using X feature     │ │  ← selected (bold border)
- * │ └─────────────────────────────────────────┘ │
- * │ ┌─────────────────────────────────────────┐ │
- * │ │ [3x] Preference for Y style            │ │  ← unselected
- * │ └─────────────────────────────────────────┘ │
- * └─────────────────────────────────────────────┘
+ *    [2×] Uses Bun instead of npm for package management
+ *         tool-choice · Jan 22 → Jan 25 · seen in 2 sessions
+ *
+ *  ┃ [2×] Prefers explicit error handling over try-catch blocks
+ *  ┃      style · Jan 24 → Jan 28 · seen in 1 session
+ *
+ *    [1×] Uses vim keybindings in all editors
+ *         preference · Jan 28 · seen in 1 session
+ *
+ *   (5 more below)
  */
 
-import React from "react";
-import { Box, Text } from "@opentui/react";
 import { ObservationItem } from "./ObservationItem.tsx";
+import { EmptyState } from "./EmptyState.tsx";
 import type { Observation } from "../../core/types.ts";
 
 // ---------------------------------------------------------------------------
@@ -28,24 +25,39 @@ import type { Observation } from "../../core/types.ts";
 // ---------------------------------------------------------------------------
 
 export interface ObservationListProps {
-  /** Observations to render */
   observations: Observation[];
-  /** Index of the currently selected item */
-  selectedIndex?: number;
-  /** Callback when selection changes */
-  onSelectionChange?: (index: number) => void;
-  /** Callback when approve action triggered */
-  onApprove?: (observation: Observation) => void;
-  /** Callback when deny action triggered */
-  onDeny?: (observation: Observation) => void;
-  /** Callback when skip action triggered */
-  onSkip?: (observation: Observation) => void;
-  /** Optional title displayed above the list */
-  title?: string;
-  /** Whether data is still loading */
+  selectedIndex: number;
+  approvedCount?: number;
+  deniedCount?: number;
+  skippedCount?: number;
+  viewportHeight?: number;
   isLoading?: boolean;
-  /** Message shown when no observations exist */
-  emptyMessage?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function getViewportWindow(
+  selectedIndex: number,
+  totalCount: number,
+  visibleCount: number
+): { startIndex: number; endIndex: number } {
+  if (totalCount <= visibleCount) {
+    return { startIndex: 0, endIndex: totalCount };
+  }
+
+  // Keep selected item roughly centered
+  const halfVisible = Math.floor(visibleCount / 2);
+  let startIndex = Math.max(0, selectedIndex - halfVisible);
+  let endIndex = Math.min(totalCount, startIndex + visibleCount);
+
+  // Adjust if we hit the bottom
+  if (endIndex === totalCount) {
+    startIndex = Math.max(0, totalCount - visibleCount);
+  }
+
+  return { startIndex, endIndex };
 }
 
 // ---------------------------------------------------------------------------
@@ -54,65 +66,73 @@ export interface ObservationListProps {
 
 export function ObservationList({
   observations,
-  selectedIndex = 0,
-  onSelectionChange: _onSelectionChange,
-  onApprove: _onApprove,
-  onDeny: _onDeny,
-  onSkip: _onSkip,
-  title,
+  selectedIndex,
+  approvedCount = 0,
+  deniedCount = 0,
+  skippedCount = 0,
+  viewportHeight = 15,
   isLoading = false,
-  emptyMessage = "No observations pending.",
 }: ObservationListProps) {
-  // Clamp index defensively
-  const safeIndex =
-    observations.length > 0
-      ? Math.max(0, Math.min(selectedIndex, observations.length - 1))
-      : 0;
-
   // Loading state
   if (isLoading) {
     return (
-      <Box paddingX={2} paddingY={1}>
-        <Text color="gray">Loading observations...</Text>
-      </Box>
+      <box paddingLeft={2} paddingRight={2} paddingTop={1} paddingBottom={1}>
+        <text>
+          <span fg="#808080">Loading observations...</span>
+        </text>
+      </box>
     );
   }
 
   // Empty state
   if (observations.length === 0) {
     return (
-      <Box paddingX={2} paddingY={1}>
-        <Text color="gray">{emptyMessage}</Text>
-      </Box>
+      <EmptyState
+        approvedCount={approvedCount}
+        deniedCount={deniedCount}
+        skippedCount={skippedCount}
+      />
     );
   }
 
+  // Calculate visible items (each item is ~3 lines: 2 content + 1 margin)
+  const itemHeight = 3;
+  const visibleCount = Math.max(1, Math.floor(viewportHeight / itemHeight));
+
+  const { startIndex, endIndex } = getViewportWindow(
+    selectedIndex,
+    observations.length,
+    visibleCount
+  );
+
+  const itemsAbove = startIndex;
+  const itemsBelow = observations.length - endIndex;
+
   return (
-    <Box flexDirection="column" width="100%" flexGrow={1}>
-      {/* Optional title */}
-      {title && (
-        <Box paddingX={1} paddingY={0}>
-          <Text bold color="cyan">{title}</Text>
-        </Box>
+    <box flexDirection="column" width="100%" flexGrow={1}>
+      {/* Scroll indicator: above */}
+      {itemsAbove > 0 && (
+        <text>
+          <span fg="#585858">  ({itemsAbove} more above)</span>
+        </text>
       )}
 
-      {/* Position indicator */}
-      <Box paddingX={1}>
-        <Text color="gray" dim>
-          {`${safeIndex + 1}/${observations.length}`}
-        </Text>
-      </Box>
-
-      {/* Observation items */}
-      {observations.map((observation, index) => (
-        <Box key={observation.id} paddingY={0} width="100%">
-          <ObservationItem
-            observation={observation}
-            isSelected={index === safeIndex}
-          />
-        </Box>
+      {/* Visible items */}
+      {observations.slice(startIndex, endIndex).map((obs, i) => (
+        <ObservationItem
+          key={obs.id}
+          observation={obs}
+          isSelected={startIndex + i === selectedIndex}
+        />
       ))}
-    </Box>
+
+      {/* Scroll indicator: below */}
+      {itemsBelow > 0 && (
+        <text>
+          <span fg="#585858">  ({itemsBelow} more below)</span>
+        </text>
+      )}
+    </box>
   );
 }
 

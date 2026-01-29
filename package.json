@@ -4,7 +4,7 @@
   "type": "module",
   "description": "AI coding session analyzer that identifies patterns and maintains hierarchical memory",
   "bin": {
-    "sanj": "./dist/cli.js"
+    "sanj": "./src/cli/index.ts"
   },
   "scripts": {
     "dev": "bun src/cli/index.ts",
@@ -27,11 +27,12 @@
     "chalk": "^5.6.2",
     "chokidar": "^5.0.0",
     "clerc": "^1.2.1",
-    "react": "^18.3.1"
+    "react": "^19.0.0",
+    "sanj": "link:sanj"
   },
   "devDependencies": {
     "typescript": "^5.7.3",
-    "@types/react": "^18.3.18",
+    "@types/react": "^19.0.0",
     "@types/bun": "^1.1.15"
   }
 }

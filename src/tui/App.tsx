@@ -1,45 +1,49 @@
 /**
  * App.tsx — Root TUI component for the observation review interface.
  *
- * Responsibilities:
- * - Initializes OpenTUI rendering environment
- * - Manages global state (observations, selected index, current mode)
- * - Handles keyboard input (q to quit, Tab to switch views, arrow keys, action keys)
- * - Renders header, content (ObservationList), action bar, and footer
- *
  * Layout:
- * ┌─────────────────────────────────────┐
- * │  Sanj Review - Observations (5)     │  ← Header
- * ├─────────────────────────────────────┤
- * │  [ObservationList renders here]     │  ← Content
- * ├─────────────────────────────────────┤
- * │  [a] Approve  [d] Deny  [s] Skip   │  ← ActionBar
- * ├─────────────────────────────────────┤
- * │  ↑/↓: navigate | Enter: select     │  ← Footer
- * │  Tab: switch view | q: quit        │
- * └─────────────────────────────────────┘
+ * ╭─────────────────────────────────────────────────────────────────────────────╮
+ * │                                                                             │
+ * │   sanj          5 to review     ✓ 2     ✗ 1     → 0                   1/5   │
+ * │                                                                             │
+ * ╰─────────────────────────────────────────────────────────────────────────────╯
+ *
+ *  ┃ [5×] User prefers functional programming over imperative style
+ *  ┃      pattern · Jan 15 → Jan 28 · seen in 3 sessions
+ *
+ *    [3×] Always runs tests before committing changes
+ *         workflow · Jan 20 → Jan 27 · seen in 2 sessions
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  A approve   D deny   S skip   U undo(2)  │  j/k navigate   gg/G jump   Q quit
  */
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Box, Text } from "@opentui/react";
+import { useState, useEffect, useCallback } from "react";
+import { useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react";
+import { Header } from "./components/Header.tsx";
 import { ObservationList } from "./components/ObservationList.tsx";
-import { ActionBar } from "./components/ActionBar.tsx";
+import { StatusLine } from "./components/StatusLine.tsx";
+import { QuitDialog } from "./components/QuitDialog.tsx";
 import type { Observation } from "../core/types.ts";
 import type { ReviewResults } from "./index.ts";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface UndoAction {
+  type: "approve" | "deny";
+  observation: Observation;
+  previousIndex: number;
+}
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
 export interface AppProps {
-  /** Array of pending observations to review */
   observations?: Observation[];
-  /** Callback invoked when user exits the TUI */
   onResults?: (results: ReviewResults) => void;
-  /** Callback invoked when user presses 'q' */
-  onExit?: () => void;
-  /** Initial mode */
-  mode?: "observations" | "promotions";
 }
 
 // ---------------------------------------------------------------------------
@@ -49,24 +53,23 @@ export interface AppProps {
 export function App({
   observations: initialObservations = [],
   onResults,
-  onExit,
-  mode: initialMode = "observations",
 }: AppProps) {
-  const [observations, setObservations] =
-    useState<Observation[]>(initialObservations);
-  const [currentMode, setCurrentMode] = useState(initialMode);
+  const renderer = useRenderer();
+  const { width: terminalWidth, height: terminalHeight } = useTerminalDimensions();
+
+  // State
+  const [observations, setObservations] = useState<Observation[]>(initialObservations);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [focusedSection, setFocusedSection] = useState<"list" | "actionbar">(
-    "list"
-  );
-  const [isLoading, setIsLoading] = useState(false);
   const [approved, setApproved] = useState<string[]>([]);
   const [denied, setDenied] = useState<string[]>([]);
   const [skipped, setSkipped] = useState<string[]>([]);
-  const [isApproving, setIsApproving] = useState(false);
-  const [isDenying, setIsDenying] = useState(false);
+  const [undoStack, setUndoStack] = useState<UndoAction[]>([]);
+  const [gPending, setGPending] = useState(false);
 
-  // Sync observations if parent updates them (e.g. after initial load)
+  // Dialog state
+  const [showQuitDialog, setShowQuitDialog] = useState(false);
+
+  // Sync observations if parent updates them
   useEffect(() => {
     setObservations(initialObservations);
     setSelectedIndex(0);
@@ -77,195 +80,321 @@ export function App({
     if (observations.length > 0 && selectedIndex >= observations.length) {
       setSelectedIndex(observations.length - 1);
     }
-  }, [observations, selectedIndex]);
+  }, [observations.length, selectedIndex]);
 
-  const handleApprove = useCallback(() => {
-    if (observations.length === 0 || selectedIndex >= observations.length)
-      return;
-    const obs = observations[selectedIndex]!;
+  // Clear g pending after timeout
+  useEffect(() => {
+    if (!gPending) return;
+    const timeout = setTimeout(() => setGPending(false), 500);
+    return () => clearTimeout(timeout);
+  }, [gPending]);
+
+  // ---------------------------------------------------------------------------
+  // Actions
+  // ---------------------------------------------------------------------------
+
+  const handleApprove = useCallback((autoAdvance = false) => {
+    if (observations.length === 0 || selectedIndex >= observations.length) return;
+
+    const obs = observations[selectedIndex];
     if (!obs) return;
-    setIsApproving(true);
-    // Simulate brief processing delay
-    setTimeout(() => {
-      setApproved((prev) => [...prev, obs.id]);
-      setObservations((prev) => prev.filter((o) => o.id !== obs.id));
+
+    // Push to undo stack
+    setUndoStack((prev) => [...prev.slice(-9), { type: "approve", observation: obs, previousIndex: selectedIndex }]);
+
+    // Update state
+    setApproved((prev) => [...prev, obs.id]);
+    setObservations((prev) => prev.filter((o) => o.id !== obs.id));
+
+    // Adjust selection
+    if (!autoAdvance) {
       setSelectedIndex((prev) =>
-        prev >= observations.length - 1
-          ? Math.max(0, observations.length - 2)
-          : prev
+        prev >= observations.length - 1 ? Math.max(0, observations.length - 2) : prev
       );
-      setIsApproving(false);
-      setFocusedSection("list");
-    }, 50);
+    }
   }, [observations, selectedIndex]);
 
-  const handleDeny = useCallback(() => {
-    if (observations.length === 0 || selectedIndex >= observations.length)
-      return;
-    const obs = observations[selectedIndex]!;
+  const handleDeny = useCallback((autoAdvance = false) => {
+    if (observations.length === 0 || selectedIndex >= observations.length) return;
+
+    const obs = observations[selectedIndex];
     if (!obs) return;
-    setIsDenying(true);
-    setTimeout(() => {
-      setDenied((prev) => [...prev, obs.id]);
-      setObservations((prev) => prev.filter((o) => o.id !== obs.id));
+
+    // Push to undo stack
+    setUndoStack((prev) => [...prev.slice(-9), { type: "deny", observation: obs, previousIndex: selectedIndex }]);
+
+    // Update state
+    setDenied((prev) => [...prev, obs.id]);
+    setObservations((prev) => prev.filter((o) => o.id !== obs.id));
+
+    // Adjust selection
+    if (!autoAdvance) {
       setSelectedIndex((prev) =>
-        prev >= observations.length - 1
-          ? Math.max(0, observations.length - 2)
-          : prev
+        prev >= observations.length - 1 ? Math.max(0, observations.length - 2) : prev
       );
-      setIsDenying(false);
-      setFocusedSection("list");
-    }, 50);
+    }
   }, [observations, selectedIndex]);
 
-  const handleSkip = useCallback(() => {
-    if (observations.length === 0 || selectedIndex >= observations.length)
-      return;
-    const obs = observations[selectedIndex]!;
+  const handleSkip = useCallback((autoAdvance = false) => {
+    if (observations.length === 0 || selectedIndex >= observations.length) return;
+
+    const obs = observations[selectedIndex];
     if (!obs) return;
-    setSkipped((prev) => [...prev, obs.id]);
-    // Move to next item without removing
-    setSelectedIndex((prev) =>
-      prev < observations.length - 1 ? prev + 1 : prev
-    );
-    setFocusedSection("list");
+
+    // Track skipped (doesn't remove from list)
+    setSkipped((prev) => (prev.includes(obs.id) ? prev : [...prev, obs.id]));
+
+    // Move to next item
+    if (autoAdvance || selectedIndex < observations.length - 1) {
+      setSelectedIndex((prev) => Math.min(prev + 1, observations.length - 1));
+    }
   }, [observations, selectedIndex]);
 
-  const exitTUI = useCallback(() => {
-    if (onResults) {
+  const handleUndo = useCallback(() => {
+    if (undoStack.length === 0) return;
+
+    const action = undoStack[undoStack.length - 1];
+    if (!action) return;
+
+    setUndoStack((prev) => prev.slice(0, -1));
+
+    // Restore observation
+    setObservations((prev) => {
+      const newObs = [...prev];
+      const insertIndex = Math.min(action.previousIndex, newObs.length);
+      newObs.splice(insertIndex, 0, action.observation);
+      return newObs;
+    });
+
+    // Remove from approved/denied
+    if (action.type === "approve") {
+      setApproved((prev) => prev.filter((id) => id !== action.observation.id));
+    } else {
+      setDenied((prev) => prev.filter((id) => id !== action.observation.id));
+    }
+
+    // Restore selection
+    setSelectedIndex(action.previousIndex);
+  }, [undoStack]);
+
+  const exitTUI = useCallback((save: boolean) => {
+    if (save && onResults) {
       onResults({
         approvedObservations: approved,
         deniedObservations: denied,
         skippedObservations: skipped,
       });
     }
-    if (onExit) {
-      onExit();
+    renderer.destroy();
+  }, [onResults, approved, denied, skipped, renderer]);
+
+  // Show quit dialog if there are changes
+  const handleQuitRequest = useCallback(() => {
+    const hasChanges = approved.length > 0 || denied.length > 0;
+    if (hasChanges) {
+      setShowQuitDialog(true);
+    } else {
+      exitTUI(false);
     }
-  }, [onResults, onExit, approved, denied, skipped]);
+  }, [approved.length, denied.length, exitTUI]);
 
-  // Keyboard event handler
-  useEffect(() => {
-    const handleKeyDown = (event: { key: string }) => {
-      const key = event.key;
+  // Quit dialog handlers
+  const handleQuitSave = useCallback(() => {
+    setShowQuitDialog(false);
+    exitTUI(true);
+  }, [exitTUI]);
 
-      // Global shortcuts
-      if (key === "q" || key === "Q") {
-        exitTUI();
+  const handleQuitDiscard = useCallback(() => {
+    setShowQuitDialog(false);
+    exitTUI(false);
+  }, [exitTUI]);
+
+  const handleQuitCancel = useCallback(() => {
+    setShowQuitDialog(false);
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // Navigation
+  // ---------------------------------------------------------------------------
+
+  const moveUp = useCallback(() => {
+    setSelectedIndex((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const moveDown = useCallback(() => {
+    setSelectedIndex((prev) => Math.min(observations.length - 1, prev + 1));
+  }, [observations.length]);
+
+  const jumpToTop = useCallback(() => {
+    setSelectedIndex(0);
+  }, []);
+
+  const jumpToBottom = useCallback(() => {
+    setSelectedIndex(Math.max(0, observations.length - 1));
+  }, [observations.length]);
+
+  const pageUp = useCallback(() => {
+    const pageSize = Math.floor(terminalHeight / 6); // ~half page
+    setSelectedIndex((prev) => Math.max(0, prev - pageSize));
+  }, [terminalHeight]);
+
+  const pageDown = useCallback(() => {
+    const pageSize = Math.floor(terminalHeight / 6);
+    setSelectedIndex((prev) => Math.min(observations.length - 1, prev + pageSize));
+  }, [observations.length, terminalHeight]);
+
+  // ---------------------------------------------------------------------------
+  // Keyboard Handler
+  // ---------------------------------------------------------------------------
+
+  useKeyboard((key) => {
+    // Don't handle keys when quit dialog is open (it handles its own keys)
+    if (showQuitDialog) return;
+
+    // Handle gg sequence
+    if (gPending) {
+      setGPending(false);
+      if (key.name === "g") {
+        jumpToTop();
         return;
       }
+      // If not g, fall through to normal handling
+    }
 
-      if (key === "Tab") {
-        setCurrentMode((prev) =>
-          prev === "observations" ? "promotions" : "observations"
-        );
+    // Check for g press (start of gg sequence)
+    if (key.name === "g" && !key.shift && !key.ctrl) {
+      setGPending(true);
+      return;
+    }
+
+    // Navigation
+    switch (key.name) {
+      case "j":
+      case "down":
+        moveDown();
+        return;
+      case "k":
+      case "up":
+        moveUp();
+        return;
+      case "home":
+        jumpToTop();
+        return;
+      case "end":
+        jumpToBottom();
+        return;
+      case "pageup":
+        pageUp();
+        return;
+      case "pagedown":
+        pageDown();
+        return;
+    }
+
+    // G (shift+g) for jump to bottom
+    if (key.name === "g" && key.shift) {
+      jumpToBottom();
+      return;
+    }
+
+    // Ctrl+d/u for half-page
+    if (key.ctrl) {
+      if (key.name === "d") {
+        pageDown();
         return;
       }
-
-      // Section-specific shortcuts
-      if (focusedSection === "list") {
-        if (key === "ArrowUp") {
-          setSelectedIndex((prev) => Math.max(0, prev - 1));
-        } else if (key === "ArrowDown") {
-          setSelectedIndex((prev) =>
-            Math.min(observations.length - 1, prev + 1)
-          );
-        } else if (key === "Enter") {
-          setFocusedSection("actionbar");
-        } else if (key === "a" || key === "A") {
-          handleApprove();
-        } else if (key === "d" || key === "D") {
-          handleDeny();
-        } else if (key === "s" || key === "S") {
-          handleSkip();
-        }
-      } else if (focusedSection === "actionbar") {
-        if (key === "a" || key === "A" || key === "Enter") {
-          handleApprove();
-        } else if (key === "d" || key === "D") {
-          handleDeny();
-        } else if (key === "s" || key === "S") {
-          handleSkip();
-        } else if (key === "Escape" || key === "ArrowUp" || key === "ArrowDown") {
-          setFocusedSection("list");
-        }
+      if (key.name === "u") {
+        pageUp();
+        return;
       }
-    };
+      if (key.name === "z") {
+        handleUndo();
+        return;
+      }
+    }
 
-    // OpenTUI dispatches key events on the process
-    process.on("keydown", handleKeyDown as () => void);
-    return () => {
-      process.removeListener("keydown", handleKeyDown as () => void);
-    };
-  }, [
-    focusedSection,
-    observations,
-    selectedIndex,
-    handleApprove,
-    handleDeny,
-    handleSkip,
-    exitTUI,
-  ]);
+    // Prevent action repeat
+    if (key.eventType === "repeat") return;
 
-  const pendingCount = observations.length;
-  const modeLabel = currentMode === "observations" ? "Observations" : "Promotions";
+    // Actions (check shift for auto-advance)
+    switch (key.name) {
+      case "a":
+        handleApprove(key.shift);
+        return;
+      case "d":
+        handleDeny(key.shift);
+        return;
+      case "s":
+      case "space":
+        handleSkip(key.shift);
+        return;
+      case "u":
+        handleUndo();
+        return;
+      case "return":
+        handleApprove(false);
+        return;
+      case "backspace":
+        handleDeny(false);
+        return;
+      case "q":
+        handleQuitRequest();
+        return;
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
+
+  // Calculate viewport height for list (total - header - status)
+  const headerHeight = 5; // Border + padding + content
+  const statusHeight = 2;
+  const listViewportHeight = Math.max(6, terminalHeight - headerHeight - statusHeight - 2);
 
   return (
-    <Box flexDirection="column" width="100%" height="100%">
+    <box flexDirection="column" width="100%" height="100%">
       {/* Header */}
-      <Box
-        borderStyle="single"
-        borderBottom
-        paddingX={1}
-        width="100%"
-      >
-        <Text bold color="cyan">
-          {`Sanj Review — ${modeLabel} (${pendingCount} pending)`}
-        </Text>
-      </Box>
-
-      {/* Content area */}
-      <Box flexDirection="column" flexGrow={1} width="100%">
-        {isLoading ? (
-          <Box paddingX={2} paddingY={1}>
-            <Text color="gray">Loading observations...</Text>
-          </Box>
-        ) : (
-          <ObservationList
-            observations={observations}
-            selectedIndex={selectedIndex}
-            onSelectionChange={setSelectedIndex}
-            onApprove={handleApprove}
-            onDeny={handleDeny}
-            onSkip={handleSkip}
-            emptyMessage={`No ${currentMode} pending. Press q to quit.`}
-          />
-        )}
-      </Box>
-
-      {/* Action Bar */}
-      <ActionBar
-        onApprove={handleApprove}
-        onDeny={handleDeny}
-        onSkip={handleSkip}
-        disabled={observations.length === 0}
-        isApproving={isApproving}
-        isDenying={isDenying}
-        isFocused={focusedSection === "actionbar"}
+      <Header
+        pendingCount={observations.length}
+        approvedCount={approved.length}
+        deniedCount={denied.length}
+        skippedCount={skipped.length}
+        currentIndex={selectedIndex}
+        totalCount={observations.length}
       />
 
-      {/* Footer */}
-      <Box
-        borderStyle="single"
-        borderTop
-        paddingX={1}
-        width="100%"
-      >
-        <Text color="gray" dim>
-          {"↑/↓: navigate | Enter: select action | Tab: switch view | q: quit"}
-        </Text>
-      </Box>
-    </Box>
+      {/* Content area */}
+      <box flexDirection="column" flexGrow={1} width="100%">
+        <ObservationList
+          observations={observations}
+          selectedIndex={selectedIndex}
+          approvedCount={approved.length}
+          deniedCount={denied.length}
+          skippedCount={skipped.length}
+          viewportHeight={listViewportHeight}
+        />
+      </box>
+
+      {/* Status line */}
+      <StatusLine
+        undoDepth={undoStack.length}
+        disabled={observations.length === 0}
+        terminalWidth={terminalWidth}
+        gPending={gPending}
+      />
+
+      {/* Quit confirmation dialog */}
+      {showQuitDialog && (
+        <QuitDialog
+          approvedCount={approved.length}
+          deniedCount={denied.length}
+          onSave={handleQuitSave}
+          onDiscard={handleQuitDiscard}
+          onCancel={handleQuitCancel}
+        />
+      )}
+    </box>
   );
 }
 
