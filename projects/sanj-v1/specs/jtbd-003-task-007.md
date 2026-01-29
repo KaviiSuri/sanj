@@ -123,7 +123,6 @@ Respond with ONLY "YES" or "NO".
 2. **CLI Invocation**
    - Use the same mechanism as `extractPatterns` to call OpenCode
    - Use configured model from config
-   - Add `-q` flag for quiet mode (suitable for automation)
 
 3. **Response Parsing**
    - Parse the LLM's response to determine similarity
@@ -165,7 +164,6 @@ The method should primarily compare `text` fields but may reference `sessionRefe
 3. **LLM integration**
    - Calls OpenCode CLI with appropriate prompt
    - Uses configured model (from config)
-   - Includes `-q` flag for quiet operation
 
 4. **Error handling**
    - Gracefully handles OpenCode CLI failures

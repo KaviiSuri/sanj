@@ -41,7 +41,7 @@ All promotions require user approval via TUI. Sanj surfaces suggestions; user de
 | Tool | Command |
 |------|---------|
 | Claude Code | `claude -p "<prompt>"` |
-| OpenCode | `opencode run --model <provider/model> "<prompt>" -q` |
+| OpenCode | `opencode run --model <provider/model> "<prompt>"` |
 
 ### Memory File Conventions
 

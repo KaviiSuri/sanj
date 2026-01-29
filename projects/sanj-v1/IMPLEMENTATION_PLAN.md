@@ -1377,7 +1377,6 @@ Update this section as tasks are completed:
   - ✅ Semantic comparison works (delegates to LLM)
   - ✅ LLM integration: calls OpenCode CLI with appropriate prompt
   - ✅ Uses configured model from constructor
-  - ✅ Includes -q flag for quiet operation
   - ✅ Error handling: gracefully handles OpenCode CLI failures
   - ✅ Returns false on error (fail-safe)
   - ✅ TypeScript compilation succeeds with no errors

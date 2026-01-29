@@ -163,8 +163,7 @@ Return empty array if no patterns found.
 ```
 
 2. **Execute OpenCode Command**:
-   - Build command: `opencode run --model {this.model} "{prompt}" -q`
-   - The `-q` flag ensures quiet mode (minimal output)
+   - Build command: `opencode run --model {this.model} "{prompt}"`
    - Execute via child process (e.g., `Bun.spawn()` or similar)
    - Capture stdout
 
@@ -233,7 +232,6 @@ import type { LLMAdapter } from "./llm/LLMAdapter";
 | Confidence threshold (0.6) | Filter out low-confidence observations to reduce noise |
 | One observation per session | Each analysis pass creates independent observation objects; deduplication handled by ObservationStore (003-009) |
 | Default model: glm-4.7 | From research; appropriate for code analysis, good balance of cost/quality |
-| Quiet mode (-q flag) | Reduces output verbosity for cron/automation contexts |
 
 ---
 

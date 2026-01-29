@@ -166,7 +166,7 @@ interface LLMAdapter {
 ```
 
 **Implementations**:
-- `OpenCodeLLMAdapter`: Uses `opencode run --model zai-coding-plan/glm-4.7 -q`
+- `OpenCodeLLMAdapter`: Uses `opencode run --model zai-coding-plan/glm-4.7`
 - `ClaudeCodeLLMAdapter`: (future) Uses `claude -p`
 
 #### CoreMemoryAdapter (interface)

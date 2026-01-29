@@ -203,14 +203,14 @@ The OpenCode implementation will:
 
 1. **extractPatterns**:
    - Serialize the session conversation into a prompt
-   - Call: `opencode run --model zai-coding-plan/glm-4.7 "<prompt>" -q`
+   - Call: `opencode run --model zai-coding-plan/glm-4.7 "<prompt>"`
    - Parse JSON output (structured response from LLM)
    - Return array of Observation objects
    - Default: extract up to 5 observations per session
 
 2. **checkSimilarity**:
    - Create a comparison prompt
-   - Call: `opencode run --model zai-coding-plan/glm-4.7 "<prompt>" -q`
+   - Call: `opencode run --model zai-coding-plan/glm-4.7 "<prompt>"`
    - Parse boolean response
    - Return true/false
 
