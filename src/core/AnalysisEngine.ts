@@ -73,6 +73,9 @@ export interface AnalysisOptions {
 
   /** Optional: Limit number of sessions to process */
   limit?: number;
+
+  /** Optional: Number of sessions to process in parallel (default: 5) */
+  concurrency?: number;
 }
 
 /**
@@ -218,8 +221,18 @@ export class AnalysisEngine {
       `[AnalysisEngine] Processing ${sessionsToProcess.length} sessions${options.limit ? ` (limited from ${allAdapterSessions.length})` : ''}...`
     );
 
-    // Process each session
-    for (const adapterSession of sessionsToProcess) {
+    // Parallel processing configuration
+    const concurrency = options.concurrency ?? 5;
+
+    // Helper to process a single session
+    const processSession = async (adapterSession: AdapterSession): Promise<{
+      success: boolean;
+      observationsCreated: number;
+      observationsBumped: number;
+      errors: AnalysisError[];
+    }> => {
+      const sessionErrors: AnalysisError[] = [];
+
       try {
         console.log(
           `[AnalysisEngine] Processing session: ${adapterSession.id} (${adapterSession.toolName})`
@@ -234,6 +247,7 @@ export class AnalysisEngine {
           modifiedAt: adapterSession.timestamp,
           path: adapterSession.filePath,
           messageCount: 0,
+          content: adapterSession.content,
         };
 
         // Extract patterns using LLM
@@ -241,6 +255,9 @@ export class AnalysisEngine {
         console.log(
           `[AnalysisEngine] Extracted ${allExtracted.length} patterns from ${adapterSession.id}`
         );
+
+        let created = 0;
+        let bumped = 0;
 
         // Store/deduplicate observations
         for (const observation of allExtracted) {
@@ -281,7 +298,7 @@ export class AnalysisEngine {
                 similarObservation.sourceSessionIds.push(adapterSession.id);
               }
               await this.observationStore.update(similarObservation.id, similarObservation);
-              observationsBumped++;
+              bumped++;
             } else {
               // Create new observation
               const now = new Date();
@@ -295,14 +312,14 @@ export class AnalysisEngine {
                 lastSeen: now,
               };
               await this.observationStore.create(newObservation);
-              observationsCreated++;
+              created++;
             }
           } catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
             console.warn(
               `[AnalysisEngine] Error storing observation: ${errorMsg}`
             );
-            errors.push({
+            sessionErrors.push({
               sessionId: adapterSession.id,
               adapter: adapterSession.toolName,
               reason: `Failed to store observation: ${errorMsg}`,
@@ -310,22 +327,47 @@ export class AnalysisEngine {
           }
         }
 
-        sessionsProcessed++;
+        return { success: true, observationsCreated: created, observationsBumped: bumped, errors: sessionErrors };
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         console.warn(
           `[AnalysisEngine] Error processing session ${adapterSession.id}: ${errorMsg}`
         );
 
-        sessionsFailed++;
-        errors.push({
-          sessionId: adapterSession.id,
-          adapter: adapterSession.toolName,
-          reason: errorMsg,
-        });
+        return {
+          success: false,
+          observationsCreated: 0,
+          observationsBumped: 0,
+          errors: [{
+            sessionId: adapterSession.id,
+            adapter: adapterSession.toolName,
+            reason: errorMsg,
+          }],
+        };
+      }
+    };
 
-        // Continue with next session
-        continue;
+    // Process sessions in parallel batches
+    for (let i = 0; i < sessionsToProcess.length; i += concurrency) {
+      const batch = sessionsToProcess.slice(i, i + concurrency);
+      const batchNum = Math.floor(i / concurrency) + 1;
+      const totalBatches = Math.ceil(sessionsToProcess.length / concurrency);
+      console.log(
+        `[AnalysisEngine] Processing batch ${batchNum}/${totalBatches} (${batch.length} sessions)`
+      );
+
+      const results = await Promise.all(batch.map(processSession));
+
+      for (const result of results) {
+        if (result.success) {
+          sessionsProcessed++;
+          observationsCreated += result.observationsCreated;
+          observationsBumped += result.observationsBumped;
+        } else {
+          sessionsFailed++;
+        }
+        // Always add any errors (both session-level and observation-level)
+        errors.push(...result.errors);
       }
     }
 

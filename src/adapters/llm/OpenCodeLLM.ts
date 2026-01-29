@@ -197,15 +197,24 @@ Respond with ONLY "YES" or "NO".`;
    * @returns Formatted prompt string
    */
   private buildExtractionPrompt(session: Session): string {
+    // Truncate content if too long (LLM context limits)
+    const maxContentLength = 50000;
+    const content = session.content
+      ? (session.content.length > maxContentLength
+          ? session.content.slice(0, maxContentLength) + '\n\n[TRUNCATED]'
+          : session.content)
+      : '[No content available]';
+
     return `Analyze the following coding session to identify recurring patterns, preferences, and insights about the user's workflow.
 
 Session ID: ${session.id}
 Project: ${session.projectSlug || 'unknown'}
 Created: ${session.createdAt.toISOString()}
 Modified: ${session.modifiedAt.toISOString()}
-Path: ${session.path}
 
-The session contains ${session.messageCount} messages.
+=== SESSION CONTENT ===
+${content}
+=== END SESSION CONTENT ===
 
 Extract observations about:
 1. User preferences (e.g., "prefers TypeScript over JavaScript")

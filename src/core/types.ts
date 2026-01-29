@@ -34,6 +34,9 @@ export interface Session {
 
   /** Approximate conversation length */
   messageCount: number;
+
+  /** Session content (conversation text) for LLM analysis */
+  content?: string;
 }
 
 /**
