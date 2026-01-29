@@ -24,18 +24,9 @@ You are helping the user create a new project folder for ralphctl.
    - `projects/$1/`
    - `projects/$1/specs/`
 
-5. **Generate ONLY** `IMPLEMENTATION_PLAN.md` with placeholder content:
-   - Do NOT create 01-research.md, 02-prd.md, 03-jtbd.md, 04-tasks.md, 05-hld.md
-   - Those files will be created by their respective commands (/project:research, /project:prd, etc.)
-
-6. **Print success message**:
+5. **Print success message**:
 ```
 ✓ Created project: $1
-
-Folder structure:
-  projects/$1/
-  ├── specs/
-  └── IMPLEMENTATION_PLAN.md
 
 Next step: Run `/project:research $1` to start capturing research
 ```
