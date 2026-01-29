@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { Cli } from "clerc";
+import { Cli, notFoundPlugin, friendlyErrorPlugin } from "clerc";
 import pkg from "../../package.json" assert { type: "json" };
 import { initHandler } from "./commands/init.js";
 import { configHandler } from "./commands/config.js";
@@ -10,15 +10,18 @@ import { configHandler } from "./commands/config.js";
  * This file sets up the CLERC-based CLI with all available commands.
  * Commands are registered here and route to their respective handlers.
  *
- * Note: Cli() automatically includes helpPlugin() and versionPlugin().
- * Help is available via: sanj --help, sanj -h, or sanj help
- * Version is available via: sanj --version, sanj -v
+ * Plugins:
+ * - Cli() includes helpPlugin() and versionPlugin() by default
+ * - notFoundPlugin: Shows "Did you mean X?" for typos
+ * - friendlyErrorPlugin: Shows friendly errors instead of stack traces
  */
 
 // Create and configure the CLI application
 Cli()
   .scriptName("sanj")
   .version(pkg.version)
+  .use(notFoundPlugin())
+  .use(friendlyErrorPlugin())
 
   // Command: init - Initialize Sanj with default settings
   .command("init", "Initialize sanj with default settings")
